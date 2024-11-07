@@ -1,60 +1,31 @@
-= Fulcro RAD Demo
+= Fulcro with Statecharts
 
-This is a demo repository for Fulcro RAD. It includes a shared source directory of files that would be
-common to any project, and then separate source directories that have specific files that would be
-needed to work with specific back-end technologies (currently SQL and Datomic).
+This is an experimental repository where I'm working on a more complete integration with
+Fulcro and statecharts. The idea is to move towards encouraging all application logic live
+in statecharts, with very few exceptions (e.g. except layout/side-effects on the DOM).
 
-IMPORTANT: Login is `tony@example.com` with password `letmein`.
+In my own development work there are many cases where a lack of a cohesive unit makes it difficult to manage the application. Some common problems:
 
-NOTE: Pathom 3 is supported. See the `pathom3` branch for a version
-that uses that version instead. That branch will be merged as soon
-as P3 is considered production-ready.
+* Application state management, especially when dealing with the traditional idea of URL route. Routes that have nested state, implied by the URL. E.g. `/event/23/subroute/foo`. Switching to a related subroute `/event/23/other` needs to track that event 23 is the context. The RESTful re-evaluation of this fact is a terrible source of incidental complexity. Add in bookmarks and browser reload and it is even worse. Managing this with some kind of UI routing system that is composable is "nice" for a certain value of "nice", but in the large it becomes quite messy, with users often using UI hooks and other rendering-based triggers to execute side-effects. The result is write-only code that is very hard to work with, and reason about.
+* Complex sequences, like onboarding/subscription management/sign-up. These tasks usually have literally dozens of cross-cutting concerns that are usually very poorly modelled. Statecharts dramatically improve the overall quality of such systems.
 
-== What is It?
+My general goals are:
 
-RAD is a set of libraries for Fulcro that have you model your data via _attributes_. An attribute is
-a description of a fact in your data model, that itself can have descritive data (ala RDF). Fulcro
-components can also be given data attributes. The combination of annotating components and the data
-model leads to some great synergies, since Fulcro itself already has the UI components participate
-in your application's global data model.
+* Composition of application elements that leverage statecharts:
+** Global top-level statechart where modules can compose in some literal composite state.
+** Invocations for co-located statecharts on components (local reasoning around a component whose statechart can start/stop when that component is active)
+** Routing and all associated logic as part of some statechart, even if it is just a composition by inclusion or invocation.
 
-The result is a system where a group of attributes can be leveraged to automatically create:
+* Better management of browser-mutable state
+** URL management/history via statechart as a "controlled component", instead of a browser-controlled "stack". Makes much better sense in general for SPAs.
 
-* Database schema
-* Networking APIs
-* Documentation
-* UIs that pull exactly what they need
-* Applications that auto-normalize their client-side data
-* Form and Report generation
-* Federated data modes, where a cluster of attributes can actually
-  live in disparate locations under different control.
+* Visualization/Simulation
+** The ability to see statecharts visually, ideally as an inspect tool that
+shows current information about running charts. Support in CLJ and CLJS.
 
-and much more.
+Some other things that I'm considering:
 
-== Status
-
-RAD includes a number of features that I would recommend in any new production project using Fulcro.
-This demo is a good reference for how to set up such a project; however, RAD is changing rapidly,
-so beware that this demo *may* be somewhat out of date. This is not a template project per-se, but
-the RAD approach of designing your data model via attributes that can then be leveraged to generate
-a lot of your boilerplate code is quite useful and powerful in all stages of development.
-
-The demo should be relatively easy for even a beginner to understand and tinker with, and I hope it
-serves to inspire you to learn more about Fulcro in general; however, if you
-do not understand Fulcro, then you will very quickly run into difficulties.
-
-*Beginners should therefore start by learning core Fulcro* via examples from the
-https://book.fulcrologic.com[Developer's Guide] or even the standard https://github.com/fulcrologic/fulcro-template.
-RAD does *not* eliminate the need to understand the core library. RAD is simply some macros and patterns
-that leverage Fulcro.
-
-The SQL version has some known bugs. If you want to play with RAD, use the Datomic database adapter for now.
-
-== Common FAQ
-
-Does RAD Require a Database (or Server)?:: No the general front-end elements of RAD could be powered by any data source. The main
-requirement is that a Fulcro "remote" exist which is able to support an EQL interface. It is trivial
-to build a remote that uses anything from an SQL database on a server to Browser LocalStorage.
+*
 
 == Building the SPA
 
@@ -69,13 +40,13 @@ $ shadow-cljs watch main
 
 if you don't have `yarn`, use `npm install` instead.
 
-== Using Datomic Cloud
+== Running the server
 
 The Datomic database used in the demo is Datomic Local. It uses an in-memory database, which makes writing an easy-to-run demo simple. To start the webapp in Datomic, use:
 
 [source, bash]
 -----
-$ clj -A:dev:datomic
+$ clj -A:dev
 user=> (clojure.core/require 'development)
 user=> (development/go)
 -----
@@ -83,76 +54,21 @@ user=> (development/go)
 This will seed the database and start the web server. The `development` namespace includes helpers for stopping/starting
 and restarting (with code reload) the server-side code.
 
-== Running an SQL-based Server (ALPHA quality)
-
-The example code should work with most SQL databases (and defaults to using an in-memory H2 db). The data source
-is configured in the `defaults.edn` config file in the sql source
-directory. See the HikariCP connection pool documentation.
-
-The SQL example has a custom `development` namespace in the `src/sql` source
-folder, along with components needed to run that server.
-
-You can start the server-side version for SQL using the deps aliases that
-set up the proper classpath:
-
-[source, bash]
------
-$ clj -A:dev:sql
-user=> (clojure.core/require 'development)
-user=> (development/go)
------
-
-== Running an XTDB-based Server (ALPHA quality)
-
-The example code for XTDB components is in the `src/xtdb` folder, along with a custom
-`development.clj`. XTDB nodes are configured by a map under `:roterski.fulcro.rad.database-adapters.xtdb/databases` key
-in `defaults.edn`.
-
-You can run it with the `:xtdb` deps alias:
-
-[source, bash]
------
-$ clj -A:dev:xtdb
-user=> (clojure.core/require 'development)
-user=> (development/go)
------
-
-== Running an Asami-based Server (ALPHA quality)
-
-The example code for Asami components is in the `src/asami` folder, along with a custom
-`development.clj`. Asami is configured by a map under `::cz.holyjak.rad.database-adapters.asami/databases` key
-in `defaults.edn`.
-
-You can run it with the `:asami` deps alias:
-
-[source, bash]
------
-$ clj -A:dev:asami
-user=> (clojure.core/require 'development)
-user=> (development/go)
------
-
-== Restarting
-
-The `development/restart` will stop the server, reload source, and start the server.
+`(development/restart)` will stop the server, reload source, and start the server.
 
 == Contributing
 
-RAD uses several different libraries at once. It is ideal that you check out the source of all of those and set
-up your deps so you can run from the source of them all at once. You may also want to update the `set-refresh-dirs`
-in the development namespace to point at those additional source directories in CLJ so you get proper reload there.
-
 === Running From Source
 
-The *very* active development I'm doing makes changes to 5 projects at once (Fulcro, Fulcro RAD, Fulcro RAD Datomic,
-Fulcro RAD SQL, and this demo). I do not guarantee I will keep everything in sync as far as versions in the deps
-file go.  I personally set the following in my top-level `~/.clojure/deps.edn`:
+The development I'm doing may make changes to many projects at once (Fulcro, Fulcro RAD, Fulcro, my statecharts library, and this demo). I do not guarantee I will keep everything in sync as far as versions in the deps file go.  I personally set the following in my top-level `~/.clojure/deps.edn`:
 
 [source]
 -----
 {:aliases {:f3-dev    {:override-deps {com.fulcrologic/fulcro {:local/root "/Users/tonykay/fulcrologic/fulcro"
                                                                :exclusions [com.taoensso/sente]}}}
+           :statecharts-dev    {:override-deps {com.fulcrologic/statecharts {:local/root "/Users/username/fulcrologic/statecharts"}}}
            :rad-dev   {:override-deps {com.fulcrologic/fulcro-rad                 {:local/root "/Users/username/fulcrologic/fulcro-rad"}
+
                                        com.fulcrologic/fulcro-rad-sql             {:local/root "/Users/username/fulcrologic/fulcro-rad-sql"}
                                        com.fulcrologic/fulcro-rad-semantic-ui     {:local/root "/Users/username/fulcrologic/fulcro-rad-semantic-ui"}
                                        com.fulcrologic/fulcro-rad-datomic         {:local/root "/Users/username/fulcrologic/fulcro-rad-datomic"
@@ -167,14 +83,12 @@ Running shadow and clj would look like this from the command line:
 [source, bash]
 -----
 # in one terminal
-$ shadow-cljs -A:f3-dev:rad-dev watch main
+$ shadow-cljs -A:f3-dev:statecharts-dev:rad-dev watch main
 # in another terminal
-$ clj -A:dev:f3-dev:rad-dev:datomic
+$ clj -A:dev:f3-dev:rad-dev:statecharts-dev
 -----
 
-In IntelliJ, you'd simply make sure to run a CLJ REPL with current classpath, and use the alias checkboxes and `+` button
-in the Clojure Deps tab to set it up.
-
+In IntelliJ, you'd simply make sure to run a CLJ REPL with current classpath, and use the alias checkboxes and `+` button in the Clojure Deps tab to set it up.
 
 == LICENSE
 
