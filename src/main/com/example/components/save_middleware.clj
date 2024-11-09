@@ -3,7 +3,7 @@
     [com.fulcrologic.rad.middleware.save-middleware :as r.s.middleware]
     [com.fulcrologic.rad.database-adapters.datomic-cloud :as datomic]
     [com.fulcrologic.rad.blob :as blob]
-    [com.example.model :as model]))
+    [com.example.model-rad.model :as model]))
 
 (defn wrap-exceptions-as-form-errors
   ([handler]

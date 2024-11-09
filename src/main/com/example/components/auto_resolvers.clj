@@ -1,6 +1,6 @@
 (ns com.example.components.auto-resolvers
   (:require
-    [com.example.model :refer [all-attributes]]
+    [com.example.model-rad.model :refer [all-attributes]]
     [mount.core :refer [defstate]]
     [com.fulcrologic.rad.resolvers :as res]
     [com.fulcrologic.rad.database-adapters.datomic-cloud :as datomic]))

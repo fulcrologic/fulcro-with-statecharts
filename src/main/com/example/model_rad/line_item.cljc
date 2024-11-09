@@ -1,4 +1,4 @@
-(ns com.example.model.line-item
+(ns com.example.model-rad.line-item
   (:require
     [com.fulcrologic.rad.attributes :refer [defattr]]
     [com.fulcrologic.rad.attributes-options :as ao]

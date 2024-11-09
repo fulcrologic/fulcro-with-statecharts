@@ -1,4 +1,4 @@
-(ns com.example.model.category
+(ns com.example.model-rad.category
   (:require
     [com.fulcrologic.rad.attributes :refer [defattr]]
     [com.fulcrologic.rad.attributes-options :as ao]

@@ -1,4 +1,4 @@
-(ns com.example.model.invoice
+(ns com.example.model-rad.invoice
   (:require
     #?(:clj [com.example.components.database-queries :as queries])
     [cljc.java-time.local-date :as ld]

@@ -6,12 +6,10 @@
     #?(:clj  [com.fulcrologic.fulcro.dom-server :as dom :refer [div label input]]
        :cljs [com.fulcrologic.fulcro.dom :as dom :refer [div label input]])
     [com.example.ui.account-forms :refer [AccountForm AccountList]]
-    [com.example.ui.dashboard :as dashboard]
     [com.example.ui.invoice-forms :refer [InvoiceForm InvoiceList AccountInvoices]]
     [com.example.ui.item-forms :refer [ItemForm InventoryReport]]
     [com.example.ui.login-dialog :refer [LoginForm]]
     [com.example.ui.master-detail :as mdetail]
-    [com.example.ui.sales-report :as sales-report]
     [com.fulcrologic.fulcro.application :as app]
     [com.fulcrologic.fulcro.components :as comp :refer [defsc]]
     [com.fulcrologic.fulcro.dom.html-entities :as ent]
@@ -33,10 +31,7 @@
 (defrouter MainRouter [this {:keys [current-state route-factory route-props]}]
   {:always-render-body? true
    :router-targets      [LandingPage ItemForm InvoiceForm InvoiceList AccountList AccountForm AccountInvoices
-                         sales-report/SalesReport InventoryReport
-                         sales-report/RealSalesReport
-                         dashboard/Dashboard
-                         mdetail/AccountList]}
+                         InventoryReport mdetail/AccountList]}
   ;; Normal Fulcro code to show a loader on slow route change (assuming Semantic UI here, should
   ;; be generalized for RAD so UI-specific code isn't necessary)
   (dom/div
@@ -83,8 +78,6 @@
                    (ui-dropdown-item {:onClick (fn [] (rroute/route-to! this AccountInvoices {:account/id (new-uuid 101)}))} "Invoices for Account 101")))
                (ui-dropdown {:className "item" :text "Reports"}
                  (ui-dropdown-menu {}
-                   (ui-dropdown-item {:onClick (fn [] (rroute/route-to! this dashboard/Dashboard {}))} "Dashboard")
-                   (ui-dropdown-item {:onClick (fn [] (rroute/route-to! this sales-report/RealSalesReport {}))} "Sales Report")
                    (ui-dropdown-item {:onClick (fn [] (rroute/route-to! this mdetail/AccountList {}))} "Master Detail"))))))
 
         (div :.right.menu

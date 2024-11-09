@@ -28,11 +28,9 @@
     (when connection
       (log/info "SEEDING data.")
       (d/transact connection {:tx-data
-                              [(seed/new-address (new-uuid 1) "111 Main St.")
+                              [
                                (seed/new-account (new-uuid 100) "Tony" "tony@example.com" "letmein"
-                                 :account/addresses ["111 Main St."]
-                                 :account/primary-address (seed/new-address (new-uuid 300) "222 Other")
-                                 :time-zone/zone-id :time-zone.zone-id/America-Los_Angeles)
+                                 :account/time-zone-id :time-zone.zone-id/America-Los_Angeles)
                                (seed/new-account (new-uuid 101) "Sam" "sam@example.com" "letmein")
                                (seed/new-account (new-uuid 102) "Sally" "sally@example.com" "letmein")
                                (seed/new-account (new-uuid 103) "Barbara" "barb@example.com" "letmein")

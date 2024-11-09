@@ -632,19 +632,6 @@
 
 (def datomic-time-zones (namespaced-time-zone-ids "time-zone.zone-id"))
 
-(defattr zone-id :time-zone/zone-id :enum
-  {ao/required?         true
-   ao/identities        #{:account/id}
-   ao/schema            :production
-   ao/enumerated-values (set (keys datomic-time-zones))
-   ao/enumerated-labels datomic-time-zones
-   fo/field-label       "Time Zone"
-   ;; Enumerations with lots of values should use autocomplete instead of pushing all possible values to UI
-   fo/field-style       :autocomplete
-   fo/field-options     {:autocomplete/search-key    :autocomplete/time-zone-options
-                         :autocomplete/debounce-ms   100
-                         :autocomplete/minimum-input 1}})
-
 (defn- format-time-zone [time-zone-name]
   (str/replace time-zone-name "_" " "))
 
@@ -673,6 +660,5 @@
                     :text (format-time-zone v)))
             time-zones))})))
 
-(def attributes [zone-id])
 #?(:clj
    (def resolvers [all-time-zones]))

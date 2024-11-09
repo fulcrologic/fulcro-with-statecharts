@@ -5,9 +5,9 @@
     [com.fulcrologic.fulcro.algorithms.tempid :as tempid]
     [com.fulcrologic.rad.picker-options :as po]
     [com.fulcrologic.rad.type-support.decimal :as math]
-    [com.example.model :as model]
-    [com.example.model.account :as account]
-    [com.example.model.invoice :as invoice]
+    [com.example.model-rad.model :as model]
+    [com.example.model-rad.account :as account]
+    [com.example.model-rad.invoice :as invoice]
     [com.fulcrologic.fulcro.algorithms.form-state :as fs]
     [com.example.ui.line-item-forms :refer [LineItemForm]]
     [com.example.ui.account-forms :refer [BriefAccountForm AccountForm]]
@@ -15,7 +15,6 @@
     [com.fulcrologic.rad.form-options :as fo]
     [com.fulcrologic.rad.routing :as rroute]
     [com.fulcrologic.rad.type-support.date-time :as datetime]
-    [taoensso.timbre :as log]
     [com.fulcrologic.rad.report :as report]
     [com.fulcrologic.rad.report-options :as ro]))
 
@@ -31,11 +30,11 @@
 
 (defn sum-subtotals* [{:invoice/keys [line-items] :as invoice}]
   (assoc invoice :invoice/total
-    (reduce
-      (fn [t {:line-item/keys [subtotal]}]
-        (math/+ t subtotal))
-      (math/zero)
-      line-items)))
+                 (reduce
+                   (fn [t {:line-item/keys [subtotal]}]
+                     (math/+ t subtotal))
+                   (math/zero)
+                   line-items)))
 
 (form/defsc-form InvoiceForm [this props]
   {fo/id             invoice/id
@@ -53,11 +52,11 @@
                                                               (if (tempid/tempid? id)
                                                                 "New Account"
                                                                 "Edit Account"))
-                                         po/quick-create    (fn [v] {:account/id        (tempid/tempid)
-                                                                     :account/email     (str/lower-case (str v "@example.com"))
-                                                                     :time-zone/zone-id :time-zone.zone-id/America-Los_Angeles
-                                                                     :account/active?   true
-                                                                     :account/name      v})
+                                         po/quick-create    (fn [v] {:account/id           (tempid/tempid)
+                                                                     :account/email        (str/lower-case (str v "@example.com"))
+                                                                     :account/time-zone-id :time-zone.zone-id/America-Los_Angeles
+                                                                     :account/active?      true
+                                                                     :account/name         v})
                                          po/allow-create?   true
                                          po/allow-edit?     true
                                          po/query-key       :account/all-accounts

@@ -8,20 +8,6 @@
 (defn- env->db [env]
   (some-> env (get-in [do/databases :production]) (deref)))
 
-(defn get-all-accounts
-  [env query-params]
-  (if-let [db (env->db env)]
-    (let [ids (if (:show-inactive? query-params)
-                (d/q '[:find ?uuid
-                       :where
-                       [?dbid :account/id ?uuid]] db)
-                (d/q '[:find ?uuid
-                       :where
-                       [?dbid :account/active? true]
-                       [?dbid :account/id ?uuid]] db))]
-      (mapv (fn [[id]] {:account/id id}) ids))
-    (log/error "No database atom for production schema!")))
-
 (defn get-all-tags
   [env _]
   (let [db (doto (env->db env) assert)
@@ -104,7 +90,7 @@
   [env username]
   (enc/if-let [db (log/spy :info (env->db env))]
     (d/pull db [:account/name
-                {:time-zone/zone-id [:db/ident]}
+                {:account/time-zone-id [:db/ident]}
                 :password/hashed-value
                 :password/salt
                 :password/iterations]

@@ -20,18 +20,6 @@
        :account/active?       true}
       extras)))
 
-(defn new-address
-  "Seed helper. Uses street as db/id for tempid purposes."
-  [id street & {:as extras}]
-  (merge
-    {:db/id          street
-     :address/id     id
-     :address/street street
-     :address/city   "Sacramento"
-     :address/state  :address.state/CA
-     :address/zip    "99999"}
-    extras))
-
 (defn new-category
   "Seed helper. Uses label for tempid purposes."
   [id label & {:as extras}]

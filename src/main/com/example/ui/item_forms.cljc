@@ -1,15 +1,14 @@
 (ns com.example.ui.item-forms
   (:require
-    [com.example.model.item :as item]
-    [com.fulcrologic.rad.picker-options :as picker-options]
-    [com.fulcrologic.fulcro.components :as comp :refer [defsc]]
+    [com.example.model-rad.item :as item]
+    [com.example.model-rad.category :as category]
+    [com.fulcrologic.fulcro.components :refer [defsc]]
     [com.fulcrologic.rad.control :as control]
     [com.fulcrologic.rad.form :as form]
     [com.fulcrologic.rad.form-options :as fo]
+    [com.fulcrologic.rad.picker-options :as picker-options]
     [com.fulcrologic.rad.report :as report]
-    [com.fulcrologic.rad.report-options :as ro]
-    [taoensso.timbre :as log]
-    [com.example.model.category :as category]))
+    [com.fulcrologic.rad.report-options :as ro]))
 
 (defsc CategoryQuery [_ _]
   {:query [:category/id :category/label]

@@ -3,7 +3,7 @@
     [clojure.string :as str]
     [com.example.components.blob-store :as bs]
     [com.example.components.config :as config]
-    [com.example.components.parser :as parser]
+    [com.example.components.pathom :as parser]
     [com.fulcrologic.fulcro.networking.file-upload :as file-upload]
     [com.fulcrologic.fulcro.server.api-middleware :as server]
     [com.fulcrologic.rad.blob :as blob]

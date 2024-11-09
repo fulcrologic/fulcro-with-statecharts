@@ -3,7 +3,7 @@
     [com.fulcrologic.rad.database-adapters.datomic-cloud :as datomic]
     [datomic.client.api :as d]
     [mount.core :refer [defstate]]
-    [com.example.model :refer [all-attributes]]
+    [com.example.model-rad.model :refer [all-attributes]]
     [com.example.components.config :refer [config]]))
 
 (defstate ^{:on-reload :noop} datomic-connections
