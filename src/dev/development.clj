@@ -1,6 +1,6 @@
 (ns development
   (:require
-    [clojure.tools.namespace.repl :as tools-ns :refer [set-refresh-dirs]]
+    [clj-reload.core :as reload]
     [com.example.components.datomic :refer [datomic-connections]]
     [com.example.components.ring-middleware]
     [com.example.components.server]
@@ -11,7 +11,7 @@
     [mount.core :as mount]
     [taoensso.timbre :as log]))
 
-(set-refresh-dirs "src/main" "src/dev")
+(reload/init {:dirs ["src/dev" "src/main" "src/test"]})
 
 (comment
   (let [db (d/db (:main datomic-connections))]
@@ -83,7 +83,8 @@
   "Stop, refresh, and restart the server."
   []
   (stop)
-  (tools-ns/refresh :after 'development/start))
+  (reload/reload)
+  (start))
 
 (def reset #'restart)
 

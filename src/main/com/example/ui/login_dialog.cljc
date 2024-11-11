@@ -15,11 +15,6 @@
                          :ui/password]
    :initial-state       {:ui/username "tony@example.com"
                          :ui/password "letmein"}
-
-   ::auth/provider      :local
-   ::auth/check-session `account/check-session
-   ::auth/logout        `account/logout
-
    :ident               (fn [] [:component/id ::LoginForm])}
   #?(:cljs
      (ui-modal {:open (boolean visible?) :dimmer true}
@@ -37,5 +32,5 @@
                      :onChange (fn [evt] (m/set-string! this :ui/password :event evt))
                      :value    (or password "")}))
            (div :.ui.primary.button
-             {:onClick (fn [] (comp/transact! this [(account/login {:username username :password password})]))}
+             {:onClick (fn [] )}
              "Login"))))))
