@@ -44,32 +44,33 @@
   (let [route-denied? (uir/route-denied? this)]
     (div :.ui.container
       (h2 "Root")
-      (dom/pre {}
-        (str
-          (with-out-str
-            (pprint (comp/get-query this)))
-          "\nConfig: "
-          (with-out-str
-            (pprint
-              (scf/current-configuration this uir/session-id)))
-          "\nActive leaves: "
-          (uir/active-leaf-routes this)))
+      #_(dom/pre {}
+          (str
+            (with-out-str
+              (pprint (comp/get-query this)))
+            "\nConfig: "
+            (with-out-str
+              (pprint
+                (scf/current-configuration this uir/session-id)))
+            "\nActive leaves: "
+            (uir/active-leaf-routes this)))
       (when route-denied?
         (div :.ui.error.message
           "The route was denied because it is busy! "
           (dom/a {:onClick (fn [] (uir/force-continue-routing! this))} "Route anyway!")))
-      (div :.ui.segment
-        (viz/ui-visualizer visualizer))
-      (div :.ui.segment
-        (div :.ui.items
-          (div :.item {:classes []
-                       :onClick (fn [] (uir/route-to! this `RouteA1))} "Goto A1")
-          (div :.item {:classes []
-                       :onClick (fn [] (uir/route-to! this `RouteA2))} "Goto A2")
-          (div :.item {:classes []
-                       :onClick (fn [] (uir/route-to! this `RouteA3))} "Goto A3"))
-        (div :.ui.segment
-          (uir/ui-current-subroute this comp/factory))))))
+      (div :.ui.grid
+        (div :.eight.wide.column
+          (div :.ui.items
+            (div :.item {:classes []
+                         :onClick (fn [] (uir/route-to! this `RouteA1))} "Goto A1")
+            (div :.item {:classes []
+                         :onClick (fn [] (uir/route-to! this `RouteA2))} "Goto A2")
+            (div :.item {:classes []
+                         :onClick (fn [] (uir/route-to! this `RouteA3))} "Goto A3"))
+          (div :.ui.segment
+            (uir/ui-current-subroute this comp/factory)))
+        (div :.eight.wide.column
+          (viz/ui-visualizer visualizer {:session-id uir/session-id}))))))
 
 (defsc RouteA1 [this {:ui/keys [clicks] :as props}]
   {:query         [:ui/clicks]
