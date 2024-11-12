@@ -3,6 +3,7 @@
     [clojure.pprint :refer [pprint]]
     [com.fulcrologic.fulcro.dom :as dom :refer [div h2 h3 h4 button]]
     [com.fulcrologic.fulcro.algorithms.timbre-support :refer [console-appender prefix-output-fn]]
+    [com.fulcrologic.statecharts.visualization.visualizer :as viz]
     [com.fulcrologic.fulcro.algorithms.tx-processing.synchronous-tx-processing :as sync]
     [com.fulcrologic.fulcro.algorithms.tx-processing.batched-processing :as btxn]
     [com.fulcrologic.fulcro.application :as app]
@@ -36,8 +37,10 @@
   (rad-app/install-ui-controls! app sui/all-controls)
   (report/install-formatter! app :boolean :affirmation (fn [_ value] (if value "yes" "no"))))
 
-(defsc Root [this props]
-  {:query [(scf/statechart-session-ident uir/session-id)]}
+(defsc Root [this {:ui/keys [visualizer]}]
+  {:query         [(scf/statechart-session-ident uir/session-id)
+                   {:ui/visualizer (comp/get-query viz/Visualizer)}]
+   :initial-state {:ui/visualizer {:chart-id ::uir/chart}}}
   (let [route-denied? (uir/route-denied? this)]
     (div :.ui.container
       (h2 "Root")
@@ -54,8 +57,9 @@
       (when route-denied?
         (div :.ui.error.message
           "The route was denied because it is busy! "
-          (dom/a {:onClick (fn []
-                             (uir/force-continue-routing! this))} "Route anyway!")))
+          (dom/a {:onClick (fn [] (uir/force-continue-routing! this))} "Route anyway!")))
+      (div :.ui.segment
+        (viz/ui-visualizer visualizer))
       (div :.ui.segment
         (div :.ui.items
           (div :.item {:classes []
