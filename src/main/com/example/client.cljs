@@ -82,9 +82,9 @@
       (str clicks))))
 
 (defsc RouteA2 [this props]
-  {:query         [:ui/clicks]
-   :initial-state {:ui/clicks 0}
-   :ident         (fn [] [:component/id ::RouteA2])}
+  {:query                 [:ui/clicks]
+   :initial-state         {:ui/clicks 0}
+   :ident                 (fn [] [:component/id ::RouteA2])}
   (div :.ui.basic.container
     (h3 "Route A2")
     (div :.ui.items
@@ -94,23 +94,23 @@
                    :onClick (fn [] (uir/route-to! this `RouteA22))} "Goto A22"))
     (uir/ui-current-subroute this comp/factory)))
 
-(defsc RouteA21 [this {:ui/keys [clicks] :as props}]
-  {:query         [:ui/clicks]
-   :initial-state {:ui/clicks 0}
-   :ident         (fn [] [:component/id ::RouteA21])}
-  (div :.ui.basic.container
+(defsc RouteA21 [this {:a21/keys [clicks] :as props}]
+  {:query                 [:a21/clicks]
+   :initial-state         {:a21/clicks 0}
+   :ident                 (fn [] [:component/id ::RouteA21])}
+  (div :.ui.basic.container {:key "21"}
     (h3 "Route A21")
-    (button {:onClick (fn [] (m/set-integer! this :ui/clicks :value (inc clicks)))}
+    (button {:onClick (fn [] (m/set-integer! this :a21/clicks :value (inc clicks)))}
       (str clicks))))
 
-(defsc RouteA22 [this {:ui/keys [clicks] :as props}]
-  {:query         [:ui/clicks]
-   :initial-state {:ui/clicks 0}
-   ro/busy?       (fn [& args] true)
-   :ident         (fn [] [:component/id ::RouteA22])}
-  (div :.ui.basic.container
+(defsc RouteA22 [this {:a22/keys [clicks] :as props}]
+  {:query                 [:a22/clicks]
+   :initial-state         {:a22/clicks 0}
+   ro/busy?               (fn [& args] true)
+   :ident                 (fn [] [:component/id ::RouteA22])}
+  (div :.ui.basic.container {:key "22"}
     (h3 "Route A22")
-    (button {:onClick (fn [] (m/set-integer! this :ui/clicks :value (inc clicks)))}
+    (button {:onClick (fn [] (m/set-integer! this :a22/clicks :value (inc clicks)))}
       (str clicks))))
 
 (defsc RouteA3 [this {:ui/keys [clicks] :as props}]
