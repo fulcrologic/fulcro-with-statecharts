@@ -3,6 +3,7 @@
     [clojure.pprint :refer [pprint]]
     [com.fulcrologic.fulcro.dom :as dom :refer [div h2 h3 h4 button]]
     [com.fulcrologic.fulcro.algorithms.timbre-support :refer [console-appender prefix-output-fn]]
+    [com.fulcrologic.statecharts.events :as evts]
     [com.fulcrologic.statecharts.visualization.visualizer :as viz]
     [com.fulcrologic.fulcro.algorithms.tx-processing.synchronous-tx-processing :as sync]
     [com.fulcrologic.fulcro.algorithms.tx-processing.batched-processing :as btxn]
@@ -24,7 +25,7 @@
     [com.fulcrologic.statecharts :as sc]
     [com.fulcrologic.statecharts.chart :refer [statechart]]
     [com.fulcrologic.statecharts.data-model.operations :as ops]
-    [com.fulcrologic.statecharts.elements :as ele :refer [on-entry parallel script state transition]]
+    [com.fulcrologic.statecharts.elements :as ele :refer [on-entry on-exit script-fn parallel script state transition]]
     [com.fulcrologic.statecharts.integration.fulcro.ui-routes-options :as ro]
     [taoensso.timbre :as log]
     [taoensso.tufte :as tufte :refer [profile]]))
@@ -44,16 +45,16 @@
   (let [route-denied? (uir/route-denied? this)]
     (div :.ui.container
       (h2 "Root")
-      #_(dom/pre {}
-          (str
-            (with-out-str
-              (pprint (comp/get-query this)))
-            "\nConfig: "
-            (with-out-str
-              (pprint
-                (scf/current-configuration this uir/session-id)))
-            "\nActive leaves: "
-            (uir/active-leaf-routes this)))
+      (dom/pre {}
+        (str
+          (with-out-str
+            (pprint (comp/get-query this)))
+          "\nConfig: "
+          (with-out-str
+            (pprint
+              (scf/current-configuration this uir/session-id)))
+          "\nActive leaves: "
+          (uir/active-leaf-routes this)))
       (when route-denied?
         (div :.ui.error.message
           "The route was denied because it is busy! "
@@ -66,11 +67,13 @@
             (div :.item {:classes []
                          :onClick (fn [] (uir/route-to! this `RouteA2))} "Goto A2")
             (div :.item {:classes []
+                         :onClick (fn [] (uir/route-to! this `RouteA22))} "Goto A2.2")
+            (div :.item {:classes []
                          :onClick (fn [] (uir/route-to! this `RouteA3))} "Goto A3"))
           (div :.ui.segment
             (uir/ui-current-subroute this comp/factory)))
-        (div :.eight.wide.column
-          (viz/ui-visualizer visualizer {:session-id uir/session-id}))))))
+        #_(div :.eight.wide.column
+            (viz/ui-visualizer visualizer {:session-id uir/session-id}))))))
 
 (defsc RouteA1 [this {:ui/keys [clicks] :as props}]
   {:query         [:ui/clicks]
@@ -94,15 +97,31 @@
                    :onClick (fn [] (uir/route-to! this `RouteA22))} "Goto A22"))
     (uir/ui-current-subroute this comp/factory)))
 
-(defsc RouteA21 [this {:a21/keys [clicks] :as props}]
-  {:query         [:a21/clicks]
-   :initial-state {:a21/clicks 0}
+(defsc RouteA21 [this props]
+  {:query         [[::sc/session-id '_]]
+   :initial-state {}
+   ro/statechart  (statechart {}
+                    (state {:id :top}
+                      (on-exit {}
+                        (script-fn [] (log/info "Exit top")))
+                      (state {:id :red}
+                        (on-exit {}
+                          (script-fn [] (log/info "Exit red")))
+                        (transition {:event  :event/swap
+                                     :target :green}))
+                      (state {:id :green}
+                        (on-exit {}
+                          (script-fn [] (log/info "Exit green")))
+                        (transition {:event  :event/swap
+                                     :target :exit})))
+                    (ele/final {:id :exit}))
    ro/initialize  :once
    :ident         (fn [] [:component/id ::RouteA21])}
-  (div :.ui.basic.container {:key "21"}
-    (h3 "Route A21")
-    (button {:onClick (fn [] (m/set-integer! this :a21/clicks :value (inc clicks)))}
-      (str clicks))))
+  (let [cconfig (uir/current-invocation-configuration this)]
+    (div :.ui.basic.container {:key "21"}
+      (h3 "Route A21")
+      (button {:onClick (fn [] (uir/send-to-self! this :event/swap))}
+        (str cconfig)))))
 
 (defsc RouteA22 [this {:a22/keys [clicks] :as props}]
   {:query         [:a22/clicks]
@@ -151,7 +170,9 @@
                    :routing/root Root}
         (uir/rstate {:route/target `RouteA1})
         (uir/rstate {:route/target `RouteA2}
-          (uir/rstate {:route/target `RouteA21})
+          (uir/istate {:route/target `RouteA21
+                       :exit-target ::RouteA1
+                       :child-session-id ::route-a21})
           (uir/rstate {:route/target `RouteA22}))
         (uir/rstate {:parallel?    true
                      :route/target `RouteA3}
