@@ -72,8 +72,8 @@
                          :onClick (fn [] (uir/route-to! this `RouteA3))} "Goto A3"))
           (div :.ui.segment
             (uir/ui-current-subroute this comp/factory)))
-        #_(div :.eight.wide.column
-            (viz/ui-visualizer visualizer {:session-id uir/session-id}))))))
+        (div :.eight.wide.column
+          (viz/ui-visualizer visualizer {:session-id uir/session-id}))))))
 
 (defsc RouteA1 [this {:ui/keys [clicks] :as props}]
   {:query         [:ui/clicks]
@@ -94,7 +94,10 @@
       (div :.item {:classes []
                    :onClick (fn [] (uir/route-to! this `RouteA21))} "Goto A21")
       (div :.item {:classes []
-                   :onClick (fn [] (uir/route-to! this `RouteA22))} "Goto A22"))
+                   :onClick (fn [] (uir/route-to! this `RouteA22))} "Goto A22")
+      (when (contains? (scf/current-configuration this uir/session-id) ::RouteA21)
+        (dom/a :.item {:onClick (fn [] (scf/send! this ::route-a21 :event/swap))}
+          "Send event to invoked chart from parent")))
     (uir/ui-current-subroute this comp/factory)))
 
 (defsc RouteA21 [this props]
@@ -166,18 +169,18 @@
 (def application-chart
   (statechart {}
     (uir/routing-regions
-      (uir/routes {:id           :region/routes
-                   :routing/root Root}
-        (uir/rstate {:route/target `RouteA1})
-        (uir/rstate {:route/target `RouteA2}
-          (uir/istate {:route/target `RouteA21
-                       :exit-target ::RouteA1
-                       :child-session-id ::route-a21})
-          (uir/rstate {:route/target `RouteA22}))
-        (uir/rstate {:parallel?    true
-                     :route/target `RouteA3}
-          (uir/rstate {:route/target `RouteA31})
-          (uir/rstate {:route/target `RouteA32}))))))
+        (uir/routes {:id           :region/routes
+                     :routing/root Root}
+          (uir/rstate {:route/target `RouteA1})
+          (uir/rstate {:route/target `RouteA2}
+                (uir/istate {:route/target     `RouteA21
+                             :exit-target      ::RouteA1
+                             :child-session-id ::route-a21})
+                (uir/rstate {:route/target `RouteA22}))
+                  (uir/rstate {:parallel?    true
+                               :route/target `RouteA3}
+                    (uir/rstate {:route/target `RouteA31})
+                    (uir/rstate {:route/target `RouteA32}))))))
 
 (defn refresh []
   ;; hot code reload of installed controls
