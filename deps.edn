@@ -1,6 +1,6 @@
 {:paths   ["src/main"]
 
- :deps    {com.fulcrologic/fulcro                 {:mvn/version "3.7.11-SNAPSHOT"}
+ :deps    {com.fulcrologic/fulcro                 {:mvn/version "3.8.0-alpha1"}
            com.fulcrologic/fulcro-rad             {:mvn/version "1.6.7"}
            com.fulcrologic/fulcro-rad-semantic-ui {:mvn/version "1.4.4"}
            com.fulcrologic/fulcro-i18n            {:mvn/version "1.1.2"}
@@ -41,6 +41,7 @@
            :dev       {:extra-paths ["src/dev" "resources"]
                        :extra-deps  {thheller/shadow-cljs                {:mvn/version "2.28.19"}
                                      com.fulcrologic/semantic-ui-wrapper {:mvn/version "2.1.4"}
-                                     com.taoensso/sente         {:mvn/version "1.16.2"}
+                                     com.fulcrologic/fulcro-inspect      {:mvn/version "1.0.0"}
+                                     com.taoensso/sente                  {:mvn/version "1.19.2"}
                                      binaryage/devtools                  {:mvn/version "1.0.6"}
                                      io.github.tonsky/clj-reload         {:mvn/version "0.7.0"}}}}}

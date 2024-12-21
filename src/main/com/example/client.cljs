@@ -1,34 +1,27 @@
 (ns com.example.client
   (:require
     [clojure.pprint :refer [pprint]]
-    [com.fulcrologic.fulcro.dom :as dom :refer [div h2 h3 h4 button]]
+    [com.fulcrologic.devtools.common.target :refer [ido]]
     [com.fulcrologic.fulcro.algorithms.timbre-support :refer [console-appender prefix-output-fn]]
-    [com.fulcrologic.statecharts.events :as evts]
-    [com.fulcrologic.statecharts.visualization.visualizer :as viz]
-    [com.fulcrologic.fulcro.algorithms.tx-processing.synchronous-tx-processing :as sync]
+    [com.fulcrologic.fulcro.algorithms.transit :as ft]
     [com.fulcrologic.fulcro.algorithms.tx-processing.batched-processing :as btxn]
     [com.fulcrologic.fulcro.application :as app]
     [com.fulcrologic.fulcro.components :as comp :refer [defsc]]
+    [com.fulcrologic.fulcro.dom :as dom :refer [button div h2 h3 h4]]
     [com.fulcrologic.fulcro.mutations :as m]
-    [com.fulcrologic.fulcro.routing.dynamic-routing :as dr]
     [com.fulcrologic.fulcro.react.version18 :refer [with-react18]]
     [com.fulcrologic.rad.application :as rad-app]
-    [com.fulcrologic.rad.authorization :as auth]
     [com.fulcrologic.rad.rendering.semantic-ui.semantic-ui-controls :as sui]
     [com.fulcrologic.rad.report :as report]
-    [com.fulcrologic.rad.routing :as routing]
-    [com.fulcrologic.rad.routing.history :as history]
-    [com.fulcrologic.rad.routing.html5-history :as hist5 :refer [new-html5-history]]
     [com.fulcrologic.rad.type-support.date-time :as datetime]
-    [com.fulcrologic.statecharts.integration.fulcro :as scf]
-    [com.fulcrologic.statecharts.integration.fulcro.ui-routes :as uir]
     [com.fulcrologic.statecharts :as sc]
     [com.fulcrologic.statecharts.chart :refer [statechart]]
-    [com.fulcrologic.statecharts.data-model.operations :as ops]
-    [com.fulcrologic.statecharts.elements :as ele :refer [on-entry on-exit script-fn parallel script state transition]]
+    [com.fulcrologic.statecharts.elements :as ele :refer [on-entry on-exit parallel script script-fn state transition]]
+    [com.fulcrologic.statecharts.integration.fulcro :as scf]
+    [com.fulcrologic.statecharts.integration.fulcro.ui-routes :as uir]
     [com.fulcrologic.statecharts.integration.fulcro.ui-routes-options :as ro]
-    [taoensso.timbre :as log]
-    [taoensso.tufte :as tufte :refer [profile]]))
+    [fulcro.inspect.tool :as it]
+    [taoensso.timbre :as log]))
 
 (defonce app (-> (rad-app/fulcro-rad-app {})
                (with-react18)
@@ -38,10 +31,9 @@
   (rad-app/install-ui-controls! app sui/all-controls)
   (report/install-formatter! app :boolean :affirmation (fn [_ value] (if value "yes" "no"))))
 
-(defsc Root [this {:ui/keys [visualizer]}]
-  {:query         [(scf/statechart-session-ident uir/session-id)
-                   {:ui/visualizer (comp/get-query viz/Visualizer)}]
-   :initial-state {:ui/visualizer {:chart-id ::uir/chart}}}
+(defsc Root [this props]
+  {:query         [(scf/statechart-session-ident uir/session-id)]
+   :initial-state {}}
   (let [route-denied? (uir/route-denied? this)]
     (div :.ui.container
       (h2 "Root")
@@ -67,13 +59,12 @@
             (div :.item {:classes []
                          :onClick (fn [] (uir/route-to! this `RouteA2))} "Goto A2")
             (div :.item {:classes []
-                         :onClick (fn [] (uir/route-to! this `RouteA22))} "Goto A2.2")
+                         :onClick (fn [] (uir/route-to! this `RouteA22
+                                           {:x 1 :y 2}))} "Goto A2.2")
             (div :.item {:classes []
                          :onClick (fn [] (uir/route-to! this `RouteA3))} "Goto A3"))
           (div :.ui.segment
-            (uir/ui-current-subroute this comp/factory)))
-        (div :.eight.wide.column
-          (viz/ui-visualizer visualizer {:session-id uir/session-id}))))))
+            (uir/ui-current-subroute this comp/factory)))))))
 
 (defsc RouteA1 [this {:ui/keys [clicks] :as props}]
   {:query         [:ui/clicks]
@@ -166,21 +157,36 @@
     (button {:onClick (fn [] (m/set-integer! this :ui/clicks :value (inc clicks)))}
       (str clicks))))
 
+;; URL Idea:
+;; Each active state has route parameters that are necessary for entering the route. They can be supplied by
+;; event data. When event data is used, then the data is written TO the URL and attached to that state ID.
+;; When the routing system is interpreting a URL that is pushed, it looks at the target state, and
+;; attempts to go there while also populating the event data with that URL data.
+;; Each on-entry handler looks to establish its data. If it isn't present, an error event is raised, whose action is to
+;; go to a well-known data-free state in the chart.
+;; Paths are generally not used because a parallel fork of the states creates the need for multiple sub-paths for each
+;; parallel child.
 (def application-chart
   (statechart {}
     (uir/routing-regions
-        (uir/routes {:id           :region/routes
-                     :routing/root Root}
-          (uir/rstate {:route/target `RouteA1})
-          (uir/rstate {:route/target `RouteA2}
-                (uir/istate {:route/target     `RouteA21
-                             :exit-target      ::RouteA1
-                             :child-session-id ::route-a21})
-                (uir/rstate {:route/target `RouteA22}))
-                  (uir/rstate {:parallel?    true
-                               :route/target `RouteA3}
-                    (uir/rstate {:route/target `RouteA31})
-                    (uir/rstate {:route/target `RouteA32}))))))
+      (uir/routes {:id           :region/routes
+                   :routing/root Root}
+        (uir/rstate {:route/target `RouteA1
+                     :route/path   "/a1"})
+        (uir/rstate {:route/target `RouteA2}
+          (uir/istate {:route/target     `RouteA21
+                       :route/path       "/a2.1"
+                       :exit-target      ::RouteA3
+                       :child-session-id ::route-a21})
+          (uir/rstate {:route/target `RouteA22
+                       :route/params #{:x :y}
+                       :route/path   "/a2.2"}))
+        (uir/rstate {:parallel?    true
+                     :route/path   "/a3"
+                     ;; TASK: Validate that NO immediate children declare a route path
+                     :route/target `RouteA3}
+          (uir/rstate {:route/target `RouteA31})
+          (uir/rstate {:route/target `RouteA32}))))))
 
 (defn refresh []
   ;; hot code reload of installed controls
@@ -190,6 +196,8 @@
   (app/force-root-render! app))
 
 (defn init []
+  (ido
+    (it/add-fulcro-inspect! app))
   (log/merge-config! {:output-fn prefix-output-fn
                       :appenders {:console (console-appender)}})
   (log/info "Starting App")
