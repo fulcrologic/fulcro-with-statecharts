@@ -1,9 +1,7 @@
 (ns com.example.client
   (:require
     [clojure.pprint :refer [pprint]]
-    [com.fulcrologic.devtools.common.target :refer [ido]]
     [com.fulcrologic.fulcro.algorithms.timbre-support :refer [console-appender prefix-output-fn]]
-    [com.fulcrologic.fulcro.algorithms.transit :as ft]
     [com.fulcrologic.fulcro.algorithms.tx-processing.batched-processing :as btxn]
     [com.fulcrologic.fulcro.application :as app]
     [com.fulcrologic.fulcro.components :as comp :refer [defsc]]
@@ -172,17 +170,17 @@
       (uir/routes {:id           :region/routes
                    :routing/root Root}
         (uir/rstate {:route/target `RouteA1
-                     :route/path   "/a1"})
+                     :route/path   ["a1"]})
         (uir/rstate {:route/target `RouteA2}
           (uir/istate {:route/target     `RouteA21
-                       :route/path       "/a2.1"
+                       :route/path       ["a2.1"]
                        :exit-target      ::RouteA3
                        :child-session-id ::route-a21})
           (uir/rstate {:route/target `RouteA22
                        :route/params #{:x :y}
-                       :route/path   "/a2.2"}))
+                       :route/path   ["a2.2"]}))
         (uir/rstate {:parallel?    true
-                     :route/path   "/a3"
+                     :route/path   ["a3"]
                      ;; TASK: Validate that NO immediate children declare a route path
                      :route/target `RouteA3}
           (uir/rstate {:route/target `RouteA31})
@@ -196,8 +194,7 @@
   (app/force-root-render! app))
 
 (defn init []
-  (ido
-    (it/add-fulcro-inspect! app))
+  (it/add-fulcro-inspect! app)
   (log/merge-config! {:output-fn prefix-output-fn
                       :appenders {:console (console-appender)}})
   (log/info "Starting App")
