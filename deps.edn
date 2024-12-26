@@ -5,7 +5,7 @@
            com.fulcrologic/fulcro-rad-semantic-ui {:mvn/version "1.4.4"}
            com.fulcrologic/fulcro-i18n            {:mvn/version "1.1.2"}
            com.fulcrologic/fulcro-rad-datomic     {:mvn/version "1.4.5"}
-           com.fulcrologic/statecharts            {:mvn/version "1.2.8-SNAPSHOT"}
+           com.fulcrologic/statecharts            {:mvn/version "1.2.8"}
            com.wsscode/pathom                     {:mvn/version "2.4.0"}
            edn-query-language/eql                 {:mvn/version "1.0.2"}
            com.fulcrologic/guardrails             {:mvn/version "1.2.9"}
