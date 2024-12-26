@@ -1,6 +1,6 @@
 {:paths   ["src/main"]
 
- :deps    {com.fulcrologic/fulcro                 {:mvn/version "3.8.0-alpha2"}
+ :deps    {com.fulcrologic/fulcro                 {:mvn/version "3.8.0-alpha3"}
            com.fulcrologic/fulcro-rad             {:mvn/version "1.6.7"}
            com.fulcrologic/fulcro-rad-semantic-ui {:mvn/version "1.4.4"}
            com.fulcrologic/fulcro-i18n            {:mvn/version "1.1.2"}
@@ -39,9 +39,9 @@
                        :extra-deps {lambdaisland/kaocha {:mvn/version "1.71.1119"}}}
 
            :dev       {:extra-paths ["src/dev" "resources"]
-                       :extra-deps  {thheller/shadow-cljs                {:mvn/version "2.28.19"}
-                                     com.fulcrologic/semantic-ui-wrapper {:mvn/version "2.1.4"}
-                                     com.fulcrologic/fulcro-inspect      {:mvn/version "1.0.1"}
-                                     com.taoensso/sente                  {:mvn/version "1.19.2"}
-                                     binaryage/devtools                  {:mvn/version "1.0.6"}
-                                     io.github.tonsky/clj-reload         {:mvn/version "0.7.0"}}}}}
+                       :extra-deps  {thheller/shadow-cljs                   {:mvn/version "2.28.19"}
+                                     com.fulcrologic/semantic-ui-wrapper    {:mvn/version "2.1.4"}
+                                     com.fulcrologic/fulcro-inspect         {:mvn/version "1.0.2"}
+                                     com.taoensso/sente                     {:mvn/version "1.19.2"}
+                                     binaryage/devtools                     {:mvn/version "1.0.6"}
+                                     io.github.tonsky/clj-reload            {:mvn/version "0.7.0"}}}}}
