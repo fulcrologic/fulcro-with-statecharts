@@ -6,6 +6,7 @@
     [com.example.model.account :as m.account]
     [com.example.model-rad.account :as account]
     [com.example.model-rad.model :as model]
+    [com.fulcrologic.statecharts.integration.fulcro.rad-integration :as ri]
     [com.fulcrologic.fulcro.algorithms.form-state :as fs]
     [com.fulcrologic.fulcro.components :as comp :refer [defsc]]
     [com.fulcrologic.rad.blob :as blob]
@@ -14,7 +15,8 @@
     [com.fulcrologic.rad.form-options :as fo]
     [com.fulcrologic.rad.report :as report]
     [com.fulcrologic.rad.report-options :as ro]
-    [com.fulcrologic.rad.semantic-ui-options :as suo]))
+    [com.fulcrologic.rad.semantic-ui-options :as suo]
+    [com.fulcrologic.statecharts.integration.fulcro.ui-routes :as uir]))
 
 #_(def account-validator
     "Here's how to make a validator, possibly to override a validation defined on the attributes.
@@ -49,7 +51,7 @@
                        account/role account/time-zone-id account/email
                        account/active?]
    fo/default-values  {:account/active? true}
-   fo/route-prefix    "account"
+   fo/cancel-route    `AccountList
    fo/title           "Edit Account"})
 
 (form/defsc-form BriefAccountForm [this props]
@@ -104,8 +106,10 @@
                                                                         0 ""
                                                                         1 "center aligned"
                                                                         "collapsing"))}
-   ro/form-links          {account/name AccountForm}
-   ro/column-formatters   {:account/active? (fn [this v] (if v "Yes" "No"))}
+   ro/column-formatters   {:account/name    (fn [this v {:account/keys [id name]}]
+                                              (dom/a {:onClick (fn [] (ri/edit! this AccountForm id))}
+                                                (str name)))
+                           :account/active? (fn [this v] (if v "Yes" "No"))}
    ro/column-headings     {:account/name "Account Name"}
    ro/columns             [account/name account/active?]
    ro/row-pk              account/id
@@ -126,7 +130,7 @@
    ro/controls            {::new-account   {:type   :button
                                             :local? true
                                             :label  "New Account"
-                                            :action (fn [this _] (form/create! this AccountForm))}
+                                            :action (fn [this _] (ri/create! this AccountForm))}
                            ::search!       {:type   :button
                                             :local? true
                                             :label  "Filter"

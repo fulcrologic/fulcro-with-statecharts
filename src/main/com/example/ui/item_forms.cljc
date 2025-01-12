@@ -1,7 +1,10 @@
 (ns com.example.ui.item-forms
   (:require
+    #?(:clj  [com.fulcrologic.fulcro.dom-server :as dom]
+       :cljs [com.fulcrologic.fulcro.dom :as dom])
     [com.example.model-rad.item :as item]
     [com.example.model-rad.category :as category]
+    [com.fulcrologic.statecharts.integration.fulcro.rad-integration :as ri]
     [com.fulcrologic.fulcro.components :refer [defsc]]
     [com.fulcrologic.rad.control :as control]
     [com.fulcrologic.rad.form :as form]
@@ -29,7 +32,7 @@
                                                                                           {:text (str label) :value [:category/id id]})
                                                                                         (sort-by :category/label options)))
                                      ::picker-options/cache-time-ms   30000}}
-   fo/route-prefix  "item"
+   fo/cancel-route  ::InventoryReport
    fo/title         "Edit Item"})
 
 (report/defsc-report InventoryReport [this props]
@@ -37,6 +40,9 @@
    ro/source-attribute    :item/all-items
    ro/row-pk              item/id
    ro/columns             [item/item-name category/label item/price item/in-stock]
+   ro/column-formatters   {:item/name (fn [this _ {:item/keys [id name]}]
+                                        (dom/a {:onClick (fn [] (ri/edit! this ItemForm id))}
+                                          (str name)))}
 
    ro/row-visible?        (fn [filter-parameters row] (let [{::keys [category]} filter-parameters
                                                             row-category (get row :category/label)]
@@ -63,8 +69,6 @@
    ro/initial-sort-params {:sort-by          :item/name
                            :sortable-columns #{:item/name :category/label}
                            :ascending?       true}
-
-   ro/form-links          {item/item-name ItemForm}
 
    ro/links               {:category/label (fn [this {:category/keys [label]}]
                                              (control/set-parameter! this ::category label)

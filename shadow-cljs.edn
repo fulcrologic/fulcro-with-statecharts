@@ -18,7 +18,7 @@
                                      "@js-joda/timezone"
                                      {:target  :npm
                                       :require "@js-joda/timezone/dist/js-joda-timezone-10-year-range.min.js"}}}
-                       :devtools   {:preloads   [com.fulcrologic.devtools.electron-preload]
+                       :devtools   {:preloads   [com.fulcrologic.devtools.chrome-preload]
                                     :after-load com.example.client/refresh}}
 
             :test     {:target           :browser-test
@@ -40,4 +40,3 @@
                                           :external-config {:guardrails {:throw? true :emit-spec? true}}}
                        :output-to        "target/ci.js"
                        :ns-regexp        "-spec$"}}}
-

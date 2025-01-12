@@ -1,8 +1,11 @@
 (ns com.example.model.account
   (:require
-    #?@(:clj  [[com.example.components.database-queries :as queries]
+    #?@(:clj  [[clojure.string :as str]
+               [com.example.components.database-queries :as queries]
                [com.example.lib.pathom.wrappers :refer [defresolver defmutation]]
                [com.example.components.pathom-env :as penv :refer [current-db]]
+               [com.fulcrologic.fulcro.server.api-middleware :as fmw]
+               [com.fulcrologic.rad.attributes :as attr]
                [datomic.client.api :as d]]
         :cljs [[com.fulcrologic.fulcro.mutations :as m]])
     [com.fulcrologic.fulcro.raw.components :as rc]
@@ -30,14 +33,13 @@
       :check      (constantly true)}
      {:account/all-accounts (get-all-accounts env query-params)}))
 
-#_(defattr account-invoices :account/invoices :ref
-    {ao/target     :account/id
-     ao/pc-output  [{:account/invoices [:invoice/id]}]
-     ao/pc-resolve (fn [{:keys [query-params] :as env} _]
-                     #?(:clj
-                        {:account/invoices (queries/get-customer-invoices env query-params)}))})
-
-
+#?(:clj
+   (defresolver account-invoices
+     "Find the invoices for an account that is specified as a parameter in the query."
+     [env _]
+     {::pc/output [{:account/invoices [:invoice/id]}]
+      :check      (constantly true)}
+     {:account/invoices (queries/get-customer-invoices env (:query-params env))}))
 
 
 #?(:clj
@@ -50,3 +52,43 @@
      (remote [e]
        (-> e
          (m/returning (rc/nc [:account/id :account/active]))))))
+
+#?(:clj
+   (defmutation login [env {:account/keys [email password]}]
+     {:check      (constantly true)
+      ::pc/output [:account/email :session/ok?]}
+     (let [fail {:account/email email
+                 :session/ok?   false}]
+       (if (and email password)
+         (let [db               (penv/current-db env)
+               normalized-email (-> email (str/trim) (str/lower-case))
+               {:password/keys [salt hashed-value iterations] :as actual-account} (d/pull db [:account/email :password/hashed-value :password/salt :password/iterations] [:account/email normalized-email])
+               incoming-hash    (log/spy :info (attr/encrypt password salt iterations))]
+           (if (= incoming-hash (log/spy :info hashed-value))
+             (let [session {:account/email normalized-email
+                            :session/ok?   true}]
+               (fmw/augment-response session (fn [resp] (assoc resp :session session))))
+             fail))
+         fail)))
+   :cljs
+   (m/declare-mutation login `login))
+
+#?(:clj
+   (defmutation check-session [env _]
+     {:check      (constantly true)
+      ::pc/output [:account/email :session/ok?]}
+     (let [session (log/spy :info (penv/session env))]
+       (if (:session/ok? session)
+         session
+         {:session/ok? false})))
+   :cljs
+   (m/declare-mutation check-session `check-session))
+
+#?(:clj
+   (defmutation logout [env _]
+     {:check      (constantly true)
+      ::pc/output [:account/email :session/ok?]}
+     (fmw/augment-response {:session/ok? false} (fn [resp] (assoc resp :session {:session/ok?   false
+                                                                                 :account/email nil}))))
+   :cljs
+   (m/declare-mutation logout `logout))

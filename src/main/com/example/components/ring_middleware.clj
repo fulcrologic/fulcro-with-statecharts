@@ -68,4 +68,3 @@
       (server/wrap-transit-response {})
       (wrap-html-routes)
       (wrap-defaults defaults-config))))
-

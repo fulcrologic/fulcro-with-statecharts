@@ -2,62 +2,45 @@
   (:require
     #?@(:cljs [[com.fulcrologic.semantic-ui.modules.dropdown.ui-dropdown :refer [ui-dropdown]]
                [com.fulcrologic.semantic-ui.modules.dropdown.ui-dropdown-menu :refer [ui-dropdown-menu]]
-               [com.fulcrologic.semantic-ui.modules.dropdown.ui-dropdown-item :refer [ui-dropdown-item]]])
+               [com.fulcrologic.semantic-ui.modules.dropdown.ui-dropdown-item :refer [ui-dropdown-item]]
+               [com.fulcrologic.semantic-ui.modules.modal.ui-modal :refer [ui-modal]]
+               [com.fulcrologic.semantic-ui.modules.modal.ui-modal-content :refer [ui-modal-content]]
+               [com.fulcrologic.semantic-ui.modules.modal.ui-modal-actions :refer [ui-modal-actions]]])
     #?(:clj  [com.fulcrologic.fulcro.dom-server :as dom :refer [div label input]]
        :cljs [com.fulcrologic.fulcro.dom :as dom :refer [div label input]])
     [com.example.ui.account-forms :refer [AccountForm AccountList]]
     [com.example.ui.invoice-forms :refer [InvoiceForm InvoiceList AccountInvoices]]
     [com.example.ui.item-forms :refer [ItemForm InventoryReport]]
-    [com.example.ui.login-dialog :refer [LoginForm]]
     [com.example.ui.master-detail :as mdetail]
     [com.fulcrologic.fulcro.application :as app]
     [com.fulcrologic.fulcro.components :as comp :refer [defsc]]
     [com.fulcrologic.fulcro.dom.html-entities :as ent]
-    [com.fulcrologic.fulcro.routing.dynamic-routing :refer [defrouter]]
-    [com.fulcrologic.rad.authorization :as auth]
-    [com.fulcrologic.rad.form :as form]
     [com.fulcrologic.rad.ids :refer [new-uuid]]
-    [com.fulcrologic.rad.routing :as rroute]))
+    [com.fulcrologic.statecharts.integration.fulcro :as scf]
+    [com.fulcrologic.statecharts.integration.fulcro.rad-integration :as ri]
+    [com.fulcrologic.statecharts.integration.fulcro.ui-routes :as uir]
+    [taoensso.timbre :as log]))
 
-(defsc LandingPage [this {:ui/keys [open? selected-account edit-id] :as props}]
-  {:query         [:ui/open? :ui/selected-account :ui/edit-id]
+(defsc LandingPage [this props]
+  {:query         [:ui/open?]
    :ident         (fn [] [:component/id ::LandingPage])
-   :initial-state {}
-   :route-segment ["landing-page"]
-   :use-hooks?    true}
+   :initial-state {}}
   (dom/div "Welcome"))
 
-;; This will just be a normal router...but there can be many of them.
-(defrouter MainRouter [this {:keys [current-state route-factory route-props]}]
-  {:always-render-body? true
-   :router-targets      [LandingPage ItemForm InvoiceForm InvoiceList AccountList AccountForm AccountInvoices
-                         InventoryReport mdetail/AccountList]}
-  ;; Normal Fulcro code to show a loader on slow route change (assuming Semantic UI here, should
-  ;; be generalized for RAD so UI-specific code isn't necessary)
-  (dom/div
-    (dom/div :.ui.loader {:classes [(when-not (= :routed current-state) "active")]})
-    (when route-factory
-      (route-factory route-props))))
-
-(def ui-main-router (comp/factory MainRouter))
-
-(auth/defauthenticator Authenticator {:local LoginForm})
-
-(def ui-authenticator (comp/factory Authenticator))
-
-(defsc Root [this {::auth/keys [authorization]
-                   ::app/keys  [active-remotes]
-                   :keys       [authenticator router]}]
-  {:query         [{:authenticator (comp/get-query Authenticator)}
-                   {:router (comp/get-query MainRouter)}
-                   ::app/active-remotes
-                   ::auth/authorization]
-   :initial-state {:router        {}
-                   :authenticator {}}}
-  (let [logged-in? (= :success (some-> authorization :local ::auth/status))
-        busy?      (seq active-remotes)
-        username   (some-> authorization :local :account/name)]
+(defsc Root [this {::app/keys [active-remotes]}]
+  {:query         [::app/active-remotes (scf/statechart-session-ident uir/session-id)]
+   :initial-state {}}
+  (let [config           (scf/current-configuration this uir/session-id)
+        logged-in?       (contains? config :state/logged-in)
+        routing-blocked? (uir/route-denied? this)
+        busy?            (seq active-remotes)]
     (dom/div
+      #?(:cljs (ui-modal {:open routing-blocked?}
+                 (ui-modal-content {}
+                   "Routing away from this form will lose your unsaved changes. Are you sure?")
+                 (ui-modal-actions {}
+                   (dom/button :.ui.negative.button {:onClick (fn [] (uir/abandon-route-change! this))} "No")
+                   (dom/button :.ui.positive.button {:onClick (fn [] (uir/force-continue-routing! this))} "Yes"))))
       (div :.ui.top.menu
         (div :.ui.item "Demo")
         (when logged-in?
@@ -65,20 +48,20 @@
              (comp/fragment
                (ui-dropdown {:className "item" :text "Account"}
                  (ui-dropdown-menu {}
-                   (ui-dropdown-item {:onClick (fn [] (rroute/route-to! this AccountList {}))} "View All")
-                   (ui-dropdown-item {:onClick (fn [] (form/create! this AccountForm))} "New")))
+                   (ui-dropdown-item {:onClick (fn [] (uir/route-to! this AccountList {}))} "View All")
+                   (ui-dropdown-item {:onClick (fn [] (ri/create! this AccountForm))} "New")))
                (ui-dropdown {:className "item" :text "Inventory"}
                  (ui-dropdown-menu {}
-                   (ui-dropdown-item {:onClick (fn [] (rroute/route-to! this InventoryReport {}))} "View All")
-                   (ui-dropdown-item {:onClick (fn [] (form/create! this ItemForm))} "New")))
+                   (ui-dropdown-item {:onClick (fn [] (uir/route-to! this InventoryReport {}))} "View All")
+                   (ui-dropdown-item {:onClick (fn [] (ri/create! this ItemForm))} "New")))
                (ui-dropdown {:className "item" :text "Invoices"}
                  (ui-dropdown-menu {}
-                   (ui-dropdown-item {:onClick (fn [] (rroute/route-to! this InvoiceList {}))} "View All")
-                   (ui-dropdown-item {:onClick (fn [] (form/create! this InvoiceForm))} "New")
-                   (ui-dropdown-item {:onClick (fn [] (rroute/route-to! this AccountInvoices {:account/id (new-uuid 101)}))} "Invoices for Account 101")))
+                   (ui-dropdown-item {:onClick (fn [] (uir/route-to! this InvoiceList {}))} "View All")
+                   (ui-dropdown-item {:onClick (fn [] (ri/create! this InvoiceForm))} "New")
+                   (ui-dropdown-item {:onClick (fn [] (uir/route-to! this AccountInvoices {:account/id (new-uuid 101)}))} "Invoices for Account 101")))
                (ui-dropdown {:className "item" :text "Reports"}
                  (ui-dropdown-menu {}
-                   (ui-dropdown-item {:onClick (fn [] (rroute/route-to! this mdetail/AccountList {}))} "Master Detail"))))))
+                   (ui-dropdown-item {:onClick (fn [] (uir/route-to! this mdetail/AccountList {}))} "Master Detail"))))))
 
         (div :.right.menu
           (div :.item
@@ -87,19 +70,12 @@
           (if logged-in?
             (comp/fragment
               (div :.ui.item
-                (str "Logged in as " username))
+                (str "Logged in as " #_username))
               (div :.ui.item
-                (dom/button :.ui.button {:onClick (fn []
-                                                    ;; TODO: check if we can change routes...
-                                                    (rroute/route-to! this LandingPage {})
-                                                    (auth/logout! this :local))}
+                (dom/button :.ui.button {:onClick (fn [] (scf/send! this uir/session-id :event/logout))}
                   "Logout")))
             (div :.ui.item
-              (dom/button :.ui.primary.button {:onClick #(auth/authenticate! this :local nil)}
+              (dom/button :.ui.primary.button #_{:onClick #(auth/authenticate! this :local nil)}
                 "Login")))))
       (div :.ui.container.segment
-        (ui-authenticator authenticator)
-        (ui-main-router router)))))
-
-(def ui-root (comp/factory Root))
-
+        (uir/ui-current-subroute this comp/factory)))))

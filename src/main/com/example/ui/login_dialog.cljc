@@ -8,16 +8,18 @@
     [com.fulcrologic.rad.authorization :as auth]
     [com.fulcrologic.fulcro.dom :refer [div label input]]
     [com.fulcrologic.fulcro.mutations :as m]
+    [com.fulcrologic.statecharts.integration.fulcro :as scf]
+    [com.fulcrologic.statecharts.integration.fulcro.ui-routes :as uir]
     [taoensso.timbre :as log]))
 
-(defsc LoginForm [this {:ui/keys [username password] :as props} {:keys [visible?]}]
-  {:query               [:ui/username
-                         :ui/password]
-   :initial-state       {:ui/username "tony@example.com"
-                         :ui/password "letmein"}
-   :ident               (fn [] [:component/id ::LoginForm])}
+(defsc LoginForm [this {:ui/keys [username password] :as props}]
+  {:query         [:ui/username
+                   :ui/password]
+   :initial-state {:ui/username "tony@example.com"
+                   :ui/password "letmein"}
+   :ident         (fn [] [:component/id ::LoginForm])}
   #?(:cljs
-     (ui-modal {:open (boolean visible?) :dimmer true}
+     (ui-modal {:open true :dimmer true}
        (ui-modal-header {} "Please Log In")
        (ui-modal-content {}
          (div :.ui.form
@@ -32,5 +34,6 @@
                      :onChange (fn [evt] (m/set-string! this :ui/password :event evt))
                      :value    (or password "")}))
            (div :.ui.primary.button
-             {:onClick (fn [] )}
+             {:onClick (fn [] (scf/send! this uir/session-id :event/login {:account/email    username
+                                                                           :account/password password}))}
              "Login"))))))

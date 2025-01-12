@@ -1,5 +1,6 @@
 (ns com.example.model.timezone
   (:require
+    #?(:clj [com.example.lib.pathom.wrappers :refer [defresolver]])
     [clojure.spec.alpha :as s]
     [clojure.string :as str]
     [taoensso.timbre :as log]
@@ -636,8 +637,9 @@
   (str/replace time-zone-name "_" " "))
 
 #?(:clj
-   (pc/defresolver all-time-zones [{:keys [query-params]} _]
-     {::pc/output [{:autocomplete/time-zone-options [:text :value]}]}
+   (defresolver all-time-zones [{:keys [query-params]} _]
+     {::pc/output [{:autocomplete/time-zone-options [:text :value]}]
+      :check (constantly true)}
      (let [{:keys [only search-string]} query-params]
        {:autocomplete/time-zone-options
         (cond
@@ -659,6 +661,3 @@
                     :value k
                     :text (format-time-zone v)))
             time-zones))})))
-
-#?(:clj
-   (def resolvers [all-time-zones]))

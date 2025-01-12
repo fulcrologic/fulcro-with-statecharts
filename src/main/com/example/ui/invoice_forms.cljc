@@ -1,6 +1,9 @@
 (ns com.example.ui.invoice-forms
   (:require
+    #?(:cljs [com.fulcrologic.fulcro.dom :as dom]
+       :clj  [com.fulcrologic.fulcro.dom-server :as dom])
     [clojure.string :as str]
+    [taoensso.timbre :as log]
     [com.fulcrologic.fulcro.components :as comp :refer [defsc]]
     [com.fulcrologic.fulcro.algorithms.tempid :as tempid]
     [com.fulcrologic.rad.picker-options :as po]
@@ -13,7 +16,8 @@
     [com.example.ui.account-forms :refer [BriefAccountForm AccountForm]]
     [com.fulcrologic.rad.form :as form]
     [com.fulcrologic.rad.form-options :as fo]
-    [com.fulcrologic.rad.routing :as rroute]
+    [com.fulcrologic.statecharts.integration.fulcro.ui-routes :as uir]
+    [com.fulcrologic.statecharts.integration.fulcro.rad-integration :as ri]
     [com.fulcrologic.rad.type-support.date-time :as datetime]
     [com.fulcrologic.rad.report :as report]
     [com.fulcrologic.rad.report-options :as ro]))
@@ -70,7 +74,7 @@
                                            fo/can-delete? (fn [_ _] true)
                                            fo/can-add?    (fn [_ _] true)}}
    fo/triggers       {:derive-fields (fn [new-form-tree] (sum-subtotals* new-form-tree))}
-   fo/route-prefix   "invoice"
+   fo/cancel-route   `InvoiceList
    fo/title          (fn [_ {:invoice/keys [id]}]
                        (if (tempid/tempid? id)
                          (str "New Invoice")
@@ -78,22 +82,21 @@
 
 ;; Sample of report that can be generated on-the-fly at runtime. Looks just like normal report options, but could
 ;; be called in code using data derived from persistent storage, etc.
-(def AccountInvoices
-  (report/report ::AccountInvoices
-    {ro/title            "Customer Invoices"
-     ro/source-attribute :account/invoices
-     ro/row-pk           invoice/id
-     ro/columns          [invoice/id invoice/date invoice/total]
-     ro/column-headings  {:invoice/id "Invoice Number"}
+(report/defsc-report AccountInvoices [this props]
+  {ro/title             "Customer Invoices"
+   ro/source-attribute  :account/invoices
+   ro/row-pk            invoice/id
+   ro/columns           [invoice/id invoice/date invoice/total]
+   ro/column-headings   {:invoice/id "Invoice Number"}
+   ro/column-formatters {:invoice/id (fn [this _ {:invoice/keys [id]}]
+                                       (dom/a {:onClick (fn [] (ri/edit! this InvoiceForm id))}
+                                         (str id)))}
+   ro/controls          {:account/id {:type   :uuid
+                                      :local? true
+                                      :label  "Account"}}
+   ;; No control layout...we don't actually let the user control it
 
-     ro/form-links       {:invoice/id InvoiceForm}
-     ro/controls         {:account/id {:type   :uuid
-                                       :local? true
-                                       :label  "Account"}}
-     ;; No control layout...we don't actually let the user control it
-
-     ro/run-on-mount?    true
-     ro/route            "account-invoices"}))
+   ro/run-on-mount?     true})
 
 (report/defsc-report InvoiceList [this props]
   {ro/title               "All Invoices"
@@ -108,21 +111,26 @@
 
    ro/controls            {::new-invoice {:label  "New Invoice"
                                           :type   :button
-                                          :action (fn [this] (form/create! this InvoiceForm))}
+                                          :action (fn [this] (ri/create! this InvoiceForm))}
                            ::new-account {:label  "New Account"
                                           :type   :button
-                                          :action (fn [this] (form/create! this AccountForm))}}
+                                          :action (fn [this] (ri/create! this AccountForm))}}
 
    ro/control-layout      {:action-buttons [::new-invoice ::new-account]}
 
    ro/row-actions         [{:label  "Account Invoices"
                             :action (fn [this {:account/keys [id] :as row}]
-                                      (rroute/route-to! this AccountInvoices {:account/id id}))}
+                                      (log/spy :info row)
+                                      (uir/route-to! this AccountInvoices {:account/id id}))}
                            {:label  "Delete"
                             :action (fn [this {:invoice/keys [id] :as row}] (form/delete! this :invoice/id id))}]
 
-   ro/form-links          {:invoice/total InvoiceForm
-                           :account/name  AccountForm}
+   ro/column-formatters   {:invoice/id   (fn [this v {:invoice/keys [id]}]
+                                           (dom/a {:onClick #(ri/edit! this InvoiceForm id)}
+                                             (str id)))
+                           :account/name (fn [this v {:account/keys [id]}]
+                                           (dom/a {:onClick #(ri/edit! this AccountForm id)}
+                                             (str v)))}
 
    ro/run-on-mount?       true
    ro/route               "invoices"})
