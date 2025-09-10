@@ -1,11 +1,12 @@
 {:paths   ["src/main"]
 
- :deps    {org.clojure/clojure                    {:mvn/version "1.12.1"}
-           org.clojure/clojurescript              {:mvn/version "1.12.42"}
-           com.fulcrologic/fulcro                 {:mvn/version "3.9.0-rc11-SNAPSHOT"}
-           com.fulcrologic/statecharts            {:mvn/version "1.2.22"}
-           com.fulcrologic/guardrails             {:mvn/version "1.2.9"}
-           com.taoensso/timbre                    {:mvn/version "6.7.1"}}
+ :deps    {org.clojure/clojure         {:mvn/version "1.12.1"}
+           org.clojure/clojurescript   {:mvn/version "1.12.42"}
+           com.fulcrologic/fulcro      {:mvn/version "3.9.0-rc11-SNAPSHOT"}
+           com.fulcrologic/statecharts {:mvn/version "1.2.22"}
+           com.fulcrologic/guardrails  {:mvn/version "1.2.9"}
+           com.wsscode/pathom          {:mvn/version "2.4.0"}
+           com.taoensso/timbre         {:mvn/version "6.7.1"}}
 
  :aliases {:test      {:extra-paths ["src/shared-tests"]
                        :extra-deps  {fulcrologic/fulcro-spec {:mvn/version "3.1.12"}}}
@@ -14,8 +15,8 @@
                        :extra-deps {lambdaisland/kaocha {:mvn/version "1.91.1392"}}}
 
            :dev       {:extra-paths ["src/dev" "resources"]
-                       :extra-deps  {thheller/shadow-cljs                   {:mvn/version "3.2.0"}
-                                     com.fulcrologic/semantic-ui-wrapper    {:mvn/version "2.1.4"}
-                                     com.fulcrologic/fulcro-inspect         {:mvn/version "1.0.4"}
-                                     binaryage/devtools                     {:mvn/version "1.0.7"}
-                                     io.github.tonsky/clj-reload            {:mvn/version "0.9.8"}}}}}
+                       :extra-deps  {thheller/shadow-cljs                {:mvn/version "3.2.0"}
+                                     com.fulcrologic/semantic-ui-wrapper {:mvn/version "2.1.4"}
+                                     com.fulcrologic/fulcro-inspect      {:mvn/version "1.0.4"}
+                                     binaryage/devtools                  {:mvn/version "1.0.7"}
+                                     io.github.tonsky/clj-reload         {:mvn/version "0.9.8"}}}}}

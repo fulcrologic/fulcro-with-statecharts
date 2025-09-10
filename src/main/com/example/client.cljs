@@ -1,6 +1,8 @@
 (ns com.example.client
   (:require
     [clojure.pprint :refer [pprint]]
+    [com.fulcrologic.fulcro.algorithms.merge :as merge]
+    [com.fulcrologic.fulcro.algorithms.tempid :as tempid]
     [com.fulcrologic.fulcro.algorithms.timbre-support :refer [console-appender prefix-output-fn]]
     [com.fulcrologic.fulcro.application :as app]
     [com.fulcrologic.fulcro.components :as comp :refer [defsc]]
@@ -9,11 +11,25 @@
     [com.fulcrologic.statecharts :as sc]
     [com.fulcrologic.statecharts.chart :refer [statechart]]
     [com.fulcrologic.statecharts.elements :as ele :refer [on-entry on-exit parallel script script-fn state transition]]
+    [com.fulcrologic.statecharts.environment :as senv]
     [com.fulcrologic.statecharts.integration.fulcro :as scf]
     [com.fulcrologic.statecharts.integration.fulcro.ui-routes :as uir]
     [com.fulcrologic.statecharts.integration.fulcro.ui-routes-options :as ro]
     [com.fulcrologic.statecharts.visualization.visualizer :as viz]
+    [com.wsscode.pathom.connect :as pc]
+    [com.wsscode.pathom.core :as p]
     [taoensso.timbre :as log]))
+
+(pc/defresolver thing-resolver [env {:thing/keys [id]}]
+  {::pc/input  #{:thing/id}
+   ::pc/output [:thing/value]}
+  {:thing/id    id
+   :thing/value (str "Thing" id)})
+
+(p/parser {::p/mutate  pc/mutate
+           ::p/env     {::p/reader [p/map-reader pc/reader2 pc/open-ident-reader]}
+           ::p/plugins [ (pc/connect-plugin {::pc/register [thing-resolver]})]})
+
 
 (defonce app (app/fulcro-app {}))
 
@@ -76,29 +92,40 @@
                    :onClick (fn [] (uir/route-to! this `RouteA22))} "Goto A22"))
     (uir/ui-current-subroute this comp/factory)))
 
-(defsc RouteA21 [this props]
-  {:query         [[::sc/session-id '_]]
-   :initial-state {}
-   ro/statechart  (statechart {}
-                    (state {:id :top}
-                      (on-exit {}
-                        (script-fn [] (log/info "Exit top")))
-                      (state {:id :red}
-                        (on-exit {}
-                          (script-fn [] (log/info "Exit red")))
-                        (transition {:event  :event/swap
-                                     :target :green}))
-                      (state {:id :green}
-                        (on-exit {}
-                          (script-fn [] (log/info "Exit green")))
-                        (transition {:event  :event/swap
-                                     :target :exit})))
-                    (ele/final {:id :exit}))
-   ro/initialize  :once
-   :ident         (fn [] [:component/id ::RouteA21])}
+(defsc RouteA21 [this {:thing/keys [id value]}]
+  {:query        [:thing/id
+                  :thing/value
+                  [::sc/session-id '_]]
+   :ident        :thing/id
+   ro/statechart (statechart {}
+                   (state {:id :top}
+                     (on-entry {}
+                       (script-fn [env & _]
+                         (let [id       (tempid/tempid)
+                               my-ident [:thing/id id]
+                               thing    {:thing/id    id
+                                         :thing/value 42}]
+                           (merge/merge-component! app RouteA21 thing)
+                           (scf/send! env (senv/parent-session-id env)
+                             :event/child-ident-changed {:ident my-ident})
+                           nil)))
+                     (on-exit {}
+                       (script-fn [] (log/info "Exit top")))
+                     (state {:id :red}
+                       (on-exit {}
+                         (script-fn [] (log/info "Exit red")))
+                       (transition {:event  :event/swap
+                                    :target :green}))
+                     (state {:id :green}
+                       (on-exit {}
+                         (script-fn [] (log/info "Exit green")))
+                       (transition {:event  :event/swap
+                                    :target :exit})))
+                   (ele/final {:id :exit}))
+   ro/initialize :never}
   (let [cconfig (uir/current-invocation-configuration this)]
     (div :.ui.basic.container {:key "21"}
-      (h3 "Route A21")
+      (h3 "Thing" (str id value))
       (button {:onClick (fn [] (uir/send-to-self! this :event/swap))}
         (str cconfig)))))
 
