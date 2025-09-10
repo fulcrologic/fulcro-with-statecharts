@@ -22,6 +22,7 @@
     [com.fulcrologic.statecharts.integration.fulcro.rad-integration :as ri]
     [com.fulcrologic.statecharts.integration.fulcro.ui-routes-options :as ro]
     [com.example.ui :refer [Root LandingPage]]
+    [com.example.ui.login-dialog :refer [LoginForm]]
     [com.example.model.account :as m.account]
     [fulcro.inspect.tool :as it]
     [taoensso.timbre :as log]))
@@ -33,133 +34,6 @@
 (defn setup-RAD [app]
   (rad-app/install-ui-controls! app sui/all-controls)
   (report/install-formatter! app :boolean :affirmation (fn [_ value] (if value "yes" "no"))))
-
-(comment
-  (defsc Root [this props]
-    {:query         [(scf/statechart-session-ident uir/session-id)]
-     :initial-state {}}
-    (let [route-denied? (uir/route-denied? this)]
-      (div :.ui.container
-        (h2 "Root")
-        (dom/pre {}
-          (str
-            (with-out-str
-              (pprint (comp/get-query this)))
-            "\nConfig: "
-            (with-out-str
-              (pprint
-                (scf/current-configuration this uir/session-id)))
-            "\nActive leaves: "
-            (uir/active-leaf-routes this)))
-        (when route-denied?
-          (div :.ui.error.message
-            "The route was denied because it is busy! "
-            (dom/a {:onClick (fn [] (uir/force-continue-routing! this))} "Route anyway!")))
-        (div :.ui.grid
-          (div :.eight.wide.column
-            (div :.ui.items
-              (div :.item {:classes []
-                           :onClick (fn [] (uir/route-to! this `RouteA1))} "Goto A1")
-              (div :.item {:classes []
-                           :onClick (fn [] (uir/route-to! this `RouteA2))} "Goto A2")
-              (div :.item {:classes []
-                           :onClick (fn [] (uir/route-to! this `RouteA22
-                                             {:x 1 :y 2}))} "Goto A2.2")
-              (div :.item {:classes []
-                           :onClick (fn [] (uir/route-to! this `RouteA3))} "Goto A3"))
-            (div :.ui.segment
-              (uir/ui-current-subroute this comp/factory)))))))
-
-  (defsc RouteA1 [this {:ui/keys [clicks] :as props}]
-    {:query         [:ui/clicks]
-     :initial-state {:ui/clicks 0}
-     :ident         (fn [] [:component/id ::RouteA1])}
-    (div :.ui.basic.container
-      (h3 "Route A1 (leaf)")
-      (button {:onClick (fn [] (m/set-integer! this :ui/clicks :value (inc clicks)))}
-        (str clicks))))
-
-  (defsc RouteA2 [this props]
-    {:query         [:ui/clicks]
-     :initial-state {:ui/clicks 0}
-     :ident         (fn [] [:component/id ::RouteA2])}
-    (div :.ui.basic.container
-      (h3 "Route A2")
-      (div :.ui.items
-        (div :.item {:classes []
-                     :onClick (fn [] (uir/route-to! this `RouteA21))} "Goto A21")
-        (div :.item {:classes []
-                     :onClick (fn [] (uir/route-to! this `RouteA22))} "Goto A22")
-        (when (contains? (scf/current-configuration this uir/session-id) ::RouteA21)
-          (dom/a :.item {:onClick (fn [] (scf/send! this ::route-a21 :event/swap))}
-            "Send event to invoked chart from parent")))
-      (uir/ui-current-subroute this comp/factory)))
-
-  (defsc RouteA21 [this props]
-    {:query         [[::sc/session-id '_]]
-     :initial-state {}
-     ro/statechart  (statechart {}
-                      (state {:id :top}
-                        (on-exit {}
-                          (script-fn [] (log/info "Exit top")))
-                        (state {:id :red}
-                          (on-exit {}
-                            (script-fn [] (log/info "Exit red")))
-                          (transition {:event  :event/swap
-                                       :target :green}))
-                        (state {:id :green}
-                          (on-exit {}
-                            (script-fn [] (log/info "Exit green")))
-                          (transition {:event  :event/swap
-                                       :target :exit})))
-                      (ele/final {:id :exit}))
-     ro/initialize  :once
-     :ident         (fn [] [:component/id ::RouteA21])}
-    (let [cconfig (uir/current-invocation-configuration this)]
-      (div :.ui.basic.container {:key "21"}
-        (h3 "Route A21")
-        (button {:onClick (fn [] (uir/send-to-self! this :event/swap))}
-          (str cconfig)))))
-
-  (defsc RouteA22 [this {:a22/keys [clicks] :as props}]
-    {:query         [:a22/clicks]
-     :initial-state {:a22/clicks 0}
-     ro/busy?       (fn [& args] true)
-     :ident         (fn [] [:component/id ::RouteA22])}
-    (div :.ui.basic.container {:key "22"}
-      (h3 "Route A22")
-      (button {:onClick (fn [] (m/set-integer! this :a22/clicks :value (inc clicks)))}
-        (str clicks))))
-
-  (defsc RouteA3 [this {:ui/keys [clicks] :as props}]
-    {:query         [:ui/clicks]
-     :initial-state {:ui/clicks 0}
-     :ident         (fn [] [:component/id ::RouteA3])}
-    (div :.ui.basic.container
-      (h3 "Route A3")
-      (div :.ui.grid
-        (div :.eight.wide.column
-          (uir/ui-parallel-route this `RouteA31 comp/factory))
-        (div :.eight.wide.column
-          (uir/ui-parallel-route this `RouteA32 comp/factory)))))
-
-  (defsc RouteA31 [this {:ui/keys [clicks] :as props}]
-    {:query         [:ui/clicks]
-     :initial-state {:ui/clicks 0}
-     :ident         (fn [] [:component/id ::RouteA31])}
-    (div :.ui.basic.container
-      (h3 "Route A31")
-      (button {:onClick (fn [] (m/set-integer! this :ui/clicks :value (inc clicks)))}
-        (str clicks))))
-
-  (defsc RouteA32 [this {:ui/keys [clicks] :as props}]
-    {:query         [:ui/clicks]
-     :initial-state {:ui/clicks 0}
-     :ident         (fn [] [:component/id ::RouteA32])}
-    (div :.ui.basic.container
-      (h3 "Route A32")
-      (button {:onClick (fn [] (m/set-integer! this :ui/clicks :value (inc clicks)))}
-        (str clicks)))))
 
 (defsc Session [this props]
   {:query [:account/email
@@ -176,7 +50,7 @@
      (script-fn [env data]
        [(ops/assign [:fulcro/state-map :component/id :session] {:session/ok? false})
         (fops/invoke-remote [(m.account/logout {})] {})]))
-   (uir/rstate {:route/target `com.example.ui.login-dialog/LoginForm
+   (uir/rstate {:route/target `LoginForm
                 :route/path   ["login"]}
      (transition {:event  :event/session-check
                   :cond   session-ok?

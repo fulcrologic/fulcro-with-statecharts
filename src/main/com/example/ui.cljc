@@ -8,6 +8,7 @@
                [com.fulcrologic.semantic-ui.modules.modal.ui-modal-actions :refer [ui-modal-actions]]])
     #?(:clj  [com.fulcrologic.fulcro.dom-server :as dom :refer [div label input]]
        :cljs [com.fulcrologic.fulcro.dom :as dom :refer [div label input]])
+    [clojure.pprint :refer [pprint]]
     [com.example.ui.account-forms :refer [AccountForm AccountList]]
     [com.example.ui.invoice-forms :refer [InvoiceForm InvoiceList AccountInvoices]]
     [com.example.ui.item-forms :refer [ItemForm InventoryReport]]
@@ -16,9 +17,11 @@
     [com.fulcrologic.fulcro.components :as comp :refer [defsc]]
     [com.fulcrologic.fulcro.dom.html-entities :as ent]
     [com.fulcrologic.rad.ids :refer [new-uuid]]
+
     [com.fulcrologic.statecharts.integration.fulcro :as scf]
     [com.fulcrologic.statecharts.integration.fulcro.rad-integration :as ri]
     [com.fulcrologic.statecharts.integration.fulcro.ui-routes :as uir]
+    [com.fulcrologic.statecharts.integration.fulcro.route-history :as srh]
     [taoensso.timbre :as log]))
 
 (defsc LandingPage [this props]
@@ -77,5 +80,8 @@
             (div :.ui.item
               (dom/button :.ui.primary.button #_{:onClick #(auth/authenticate! this :local nil)}
                 "Login")))))
-      (div :.ui.container.segment
+      (div :.ui.container.segment nil
+        (div :.ui.basic.segment nil
+          (dom/pre nil
+            (with-out-str (pprint (srh/url->route)))))
         (uir/ui-current-subroute this comp/factory)))))

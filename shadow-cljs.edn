@@ -1,4 +1,4 @@
-{:deps     {:aliases [:dev :test]}
+{:deps     {:aliases [:dev :test :statecharts-dev :f3-dev :rad-dev]}
  :nrepl    {:port 9000}
  :jvm-opts ["-Xmx2G"]
  :builds   {:main     {:target     :browser
