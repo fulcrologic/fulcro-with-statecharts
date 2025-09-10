@@ -1,36 +1,11 @@
 {:paths   ["src/main"]
 
- :deps    {com.fulcrologic/fulcro                 {:mvn/version "3.9.0-rc11-SNAPSHOT"}
-           com.fulcrologic/fulcro-rad             {:mvn/version "2.0.0-SNAPSHOT"}
-           com.fulcrologic/fulcro-rad-semantic-ui {:mvn/version "1.4.6"}
-           com.fulcrologic/fulcro-i18n            {:mvn/version "1.1.2"}
-           com.fulcrologic/fulcro-rad-datomic     {:mvn/version "1.5.6"}
-           com.fulcrologic/statecharts            {:mvn/version "1.2.22"}
-           com.wsscode/pathom                     {:mvn/version "2.4.0"}
-           edn-query-language/eql                 {:mvn/version "1.0.2"}
-           com.fulcrologic/guardrails             {:mvn/version "1.2.9"}
-
-           com.datomic/local                      {:mvn/version "1.0.291"}
-
-           ;; Performance checks
-           com.taoensso/tufte                     {:mvn/version "2.7.0"}
-
-           ;; Server
-           mount/mount                            {:mvn/version "0.1.23"}
-           hiccup/hiccup                          {:mvn/version "2.0.0"}
-           ring/ring-defaults                     {:mvn/version "0.6.0"}
-           ring/ring-core                         {:mvn/version "1.14.2"}
-           http-kit/http-kit                      {:mvn/version "2.8.0"}
-
-           ;; Unified logging for server
-           com.taoensso/timbre                    {:mvn/version "6.7.1"}
-           org.slf4j/log4j-over-slf4j             {:mvn/version "2.0.17"} ; auto sends log4j to slf4j
-           org.slf4j/jul-to-slf4j                 {:mvn/version "2.0.17"} ; auto sends java.util.logging to slf4j
-           org.slf4j/jcl-over-slf4j               {:mvn/version "2.0.17"} ; auto-sends java.common.logging to slf4j
-           com.fzakaria/slf4j-timbre              {:mvn/version "0.4.1"} ; hooks slf4j to timbre
-
+ :deps    {org.clojure/clojure                    {:mvn/version "1.12.1"}
            org.clojure/clojurescript              {:mvn/version "1.12.42"}
-           org.clojure/clojure                    {:mvn/version "1.12.1"}}
+           com.fulcrologic/fulcro                 {:mvn/version "3.9.0-rc11-SNAPSHOT"}
+           com.fulcrologic/statecharts            {:mvn/version "1.2.22"}
+           com.fulcrologic/guardrails             {:mvn/version "1.2.9"}
+           com.taoensso/timbre                    {:mvn/version "6.7.1"}}
 
  :aliases {:test      {:extra-paths ["src/shared-tests"]
                        :extra-deps  {fulcrologic/fulcro-spec {:mvn/version "3.1.12"}}}
