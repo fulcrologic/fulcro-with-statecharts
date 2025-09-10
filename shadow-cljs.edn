@@ -21,8 +21,8 @@
                    :devtools   {:preloads           [com.fulcrologic.devtools.chrome-preload]
                                 :http-port          8080
                                 :http-resource-root "public"
-                                :http-root          "resources/public"}
-                   :after-load com.example.client/refresh}}
+                                :http-root          "resources/public"
+                                :after-load         com.example.client/refresh}}}
 
  :test     {:target           :browser-test
             :test-dir         "resources/public/js/test"

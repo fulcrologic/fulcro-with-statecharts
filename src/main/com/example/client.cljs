@@ -1,5 +1,6 @@
 (ns com.example.client
   (:require
+    [cljs.core.async :as async]
     [clojure.pprint :refer [pprint]]
     [com.fulcrologic.fulcro.algorithms.merge :as merge]
     [com.fulcrologic.fulcro.algorithms.tempid :as tempid]
@@ -8,6 +9,7 @@
     [com.fulcrologic.fulcro.components :as comp :refer [defsc]]
     [com.fulcrologic.fulcro.dom :as dom :refer [button div h2 h3 h4]]
     [com.fulcrologic.fulcro.mutations :as m]
+    [com.fulcrologic.fulcro.networking.mock-server-remote :as msr]
     [com.fulcrologic.statecharts :as sc]
     [com.fulcrologic.statecharts.chart :refer [statechart]]
     [com.fulcrologic.statecharts.elements :as ele :refer [on-entry on-exit parallel script script-fn state transition]]
@@ -18,6 +20,7 @@
     [com.fulcrologic.statecharts.visualization.visualizer :as viz]
     [com.wsscode.pathom.connect :as pc]
     [com.wsscode.pathom.core :as p]
+    [fulcro.inspect.tool :as it]
     [taoensso.timbre :as log]))
 
 (pc/defresolver thing-resolver [env {:thing/keys [id]}]
@@ -26,12 +29,13 @@
   {:thing/id    id
    :thing/value (str "Thing" id)})
 
-(p/parser {::p/mutate  pc/mutate
-           ::p/env     {::p/reader [p/map-reader pc/reader2 pc/open-ident-reader]}
-           ::p/plugins [ (pc/connect-plugin {::pc/register [thing-resolver]})]})
+(defonce parser
+  (let [parser (p/async-parser {::p/mutate  pc/mutate-async
+                                ::p/env     {::p/reader [p/map-reader pc/async-reader2 pc/open-ident-reader]}
+                                ::p/plugins [(pc/connect-plugin {::pc/register [thing-resolver]})]})]
+    (fn [eql] (parser {} eql))))
 
-
-(defonce app (app/fulcro-app {}))
+(defonce app (app/fulcro-app {#_#_:remotes {:remote (msr/mock-http-server {:parser parser})}}))
 
 (defsc Root [this {:ui/keys [visualizer]}]
   {:query         [(scf/statechart-session-ident uir/session-id)
@@ -53,7 +57,7 @@
       (when route-denied?
         (div :.ui.error.message
           "The route was denied because it is busy! "
-          (dom/a {:onClick (fn [] (uir/force-continue-routing! this))} "Route anyway!")))
+          (dom/button {:onClick (fn [] (uir/force-continue-routing! this))} "Route anyway!")))
       (div :.ui.grid
         (div :.eight.wide.column
           (div :.ui.items
@@ -96,10 +100,10 @@
   {:query        [:thing/id
                   :thing/value
                   [::sc/session-id '_]]
-   :ident        :thing/id
+   :ident        (fn [] [:component/id ::RouteA21])
    ro/statechart (statechart {}
                    (state {:id :top}
-                     (on-entry {}
+                     #_(on-entry {}
                        (script-fn [env & _]
                          (let [id       (tempid/tempid)
                                my-ident [:thing/id id]
@@ -122,7 +126,7 @@
                        (transition {:event  :event/swap
                                     :target :exit})))
                    (ele/final {:id :exit}))
-   ro/initialize :never}
+   ro/initialize :once}
   (let [cconfig (uir/current-invocation-configuration this)]
     (div :.ui.basic.container {:key "21"}
       (h3 "Thing" (str id value))
@@ -194,6 +198,7 @@
   (log/merge-config! {:output-fn prefix-output-fn
                       :appenders {:console (console-appender)}})
   (log/info "Starting App")
+  (it/add-fulcro-inspect! app)
   (app/set-root! app Root {:initialize-state? true})
   (scf/install-fulcro-statecharts! app)
   (uir/start-routing! app application-chart)
