@@ -2,22 +2,25 @@
   (:require
     [clojure.pprint :refer [pprint]]
     [com.fulcrologic.fulcro.algorithms.timbre-support :refer [console-appender prefix-output-fn]]
-    [com.fulcrologic.fulcro.algorithms.tx-processing.batched-processing :as btxn]
     [com.fulcrologic.fulcro.application :as app]
     [com.fulcrologic.fulcro.components :as comp :refer [defsc]]
     [com.fulcrologic.fulcro.dom :as dom :refer [button div h2 h3 h4]]
     [com.fulcrologic.fulcro.mutations :as m]
-    [com.fulcrologic.fulcro.react.version18 :refer [with-react18]]
+    [com.fulcrologic.statecharts :as sc]
     [com.fulcrologic.statecharts.chart :refer [statechart]]
+    [com.fulcrologic.statecharts.elements :as ele :refer [on-entry on-exit parallel script script-fn state transition]]
     [com.fulcrologic.statecharts.integration.fulcro :as scf]
     [com.fulcrologic.statecharts.integration.fulcro.ui-routes :as uir]
     [com.fulcrologic.statecharts.integration.fulcro.ui-routes-options :as ro]
+    [com.fulcrologic.statecharts.visualization.visualizer :as viz]
     [taoensso.timbre :as log]))
 
 (defonce app (app/fulcro-app {}))
 
-(defsc Root [this props]
-  {:query [(scf/statechart-session-ident uir/session-id)]}
+(defsc Root [this {:ui/keys [visualizer]}]
+  {:query         [(scf/statechart-session-ident uir/session-id)
+                   {:ui/visualizer (comp/get-query viz/Visualizer)}]
+   :initial-state {:ui/visualizer {:chart-id ::uir/chart}}}
   (let [route-denied? (uir/route-denied? this)]
     (div :.ui.container
       (h2 "Root")
@@ -34,18 +37,22 @@
       (when route-denied?
         (div :.ui.error.message
           "The route was denied because it is busy! "
-          (dom/button {:onClick (fn []
-                             (uir/force-continue-routing! this))} "Route anyway!")))
-      (div :.ui.segment
-        (div :.ui.items
-          (div :.item {:classes []
-                       :onClick (fn [] (uir/route-to! this `RouteA1))} "Goto A1")
-          (div :.item {:classes []
-                       :onClick (fn [] (uir/route-to! this `RouteA2))} "Goto A2")
-          (div :.item {:classes []
-                       :onClick (fn [] (uir/route-to! this `RouteA3))} "Goto A3"))
-        (div :.ui.segment
-          (uir/ui-current-subroute this comp/factory))))))
+          (dom/a {:onClick (fn [] (uir/force-continue-routing! this))} "Route anyway!")))
+      (div :.ui.grid
+        (div :.eight.wide.column
+          (div :.ui.items
+            (div :.item {:classes []
+                         :onClick (fn [] (uir/route-to! this `RouteA1))} "Goto A1")
+            (div :.item {:classes []
+                         :onClick (fn [] (uir/route-to! this `RouteA2))} "Goto A2")
+            (div :.item {:classes []
+                         :onClick (fn [] (uir/route-to! this `RouteA22))} "Goto A2.2")
+            (div :.item {:classes []
+                         :onClick (fn [] (uir/route-to! this `RouteA3))} "Goto A3"))
+          (div :.ui.segment
+            (uir/ui-current-subroute this comp/factory)))
+        #_(div :.eight.wide.column
+            (viz/ui-visualizer visualizer {:session-id uir/session-id}))))))
 
 (defsc RouteA1 [this {:ui/keys [clicks] :as props}]
   {:query         [:ui/clicks]
@@ -69,23 +76,40 @@
                    :onClick (fn [] (uir/route-to! this `RouteA22))} "Goto A22"))
     (uir/ui-current-subroute this comp/factory)))
 
-(defsc RouteA21 [this {:ui/keys [clicks] :as props}]
-  {:query         [:ui/clicks]
-   :initial-state {:ui/clicks 0}
+(defsc RouteA21 [this props]
+  {:query         [[::sc/session-id '_]]
+   :initial-state {}
+   ro/statechart  (statechart {}
+                    (state {:id :top}
+                      (on-exit {}
+                        (script-fn [] (log/info "Exit top")))
+                      (state {:id :red}
+                        (on-exit {}
+                          (script-fn [] (log/info "Exit red")))
+                        (transition {:event  :event/swap
+                                     :target :green}))
+                      (state {:id :green}
+                        (on-exit {}
+                          (script-fn [] (log/info "Exit green")))
+                        (transition {:event  :event/swap
+                                     :target :exit})))
+                    (ele/final {:id :exit}))
+   ro/initialize  :once
    :ident         (fn [] [:component/id ::RouteA21])}
-  (div :.ui.basic.container
-    (h3 "Route A21")
-    (button {:onClick (fn [] (m/set-integer! this :ui/clicks :value (inc clicks)))}
-      (str clicks))))
+  (let [cconfig (uir/current-invocation-configuration this)]
+    (div :.ui.basic.container {:key "21"}
+      (h3 "Route A21")
+      (button {:onClick (fn [] (uir/send-to-self! this :event/swap))}
+        (str cconfig)))))
 
-(defsc RouteA22 [this {:ui/keys [clicks] :as props}]
-  {:query         [:ui/clicks]
-   :initial-state {:ui/clicks 0}
+(defsc RouteA22 [this {:a22/keys [clicks] :as props}]
+  {:query         [:a22/clicks]
+   :initial-state {:a22/clicks 0}
    ro/busy?       (fn [& args] true)
    :ident         (fn [] [:component/id ::RouteA22])}
-  (div :.ui.basic.container
+  (div :.ui.basic.container {:key "22"}
     (h3 "Route A22")
-    (button {:onClick (fn [] (m/set-integer! this :ui/clicks :value (inc clicks)))}
+    (button {:onClick (fn [] (m/set-integer! this :a22/clicks :value (inc clicks)))}
       (str clicks))))
 
 (defsc RouteA3 [this {:ui/keys [clicks] :as props}]
@@ -125,7 +149,9 @@
                    :routing/root Root}
         (uir/rstate {:route/target `RouteA1})
         (uir/rstate {:route/target `RouteA2}
-          (uir/rstate {:route/target `RouteA21})
+          (uir/istate {:route/target     `RouteA21
+                       :exit-target      ::RouteA1
+                       :child-session-id ::route-a21})
           (uir/rstate {:route/target `RouteA22}))
         (uir/rstate {:parallel?    true
                      :route/target `RouteA3}
@@ -133,6 +159,7 @@
           (uir/rstate {:route/target `RouteA32}))))))
 
 (defn refresh []
+  (log/info "Reinstalling controls")
   (uir/update-chart! app application-chart)
   (app/force-root-render! app))
 
