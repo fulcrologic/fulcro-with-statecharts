@@ -1,15 +1,15 @@
 (ns com.example.client
   (:require
-    [cljs.core.async :as async]
+    [clojure.core.async :as async]
     [clojure.pprint :refer [pprint]]
     [com.fulcrologic.fulcro.algorithms.merge :as merge]
     [com.fulcrologic.fulcro.algorithms.tempid :as tempid]
-    [com.fulcrologic.fulcro.algorithms.timbre-support :refer [console-appender prefix-output-fn]]
     [com.fulcrologic.fulcro.application :as app]
     [com.fulcrologic.fulcro.components :as comp :refer [defsc]]
-    [com.fulcrologic.fulcro.dom :as dom :refer [button div h2 h3 h4]]
+    #?(:clj  [com.fulcrologic.fulcro.dom-server :as dom :refer [button div h2 h3 h4]]
+       :cljs [com.fulcrologic.fulcro.dom :as dom :refer [button div h2 h3 h4]])
     [com.fulcrologic.fulcro.mutations :as m]
-    [com.fulcrologic.fulcro.networking.mock-server-remote :as msr]
+    #?(:cljs [com.fulcrologic.fulcro.networking.mock-server-remote :as msr])
     [com.fulcrologic.statecharts :as sc]
     [com.fulcrologic.statecharts.chart :refer [statechart]]
     [com.fulcrologic.statecharts.elements :as ele :refer [on-entry on-exit parallel script script-fn state transition]]
@@ -17,7 +17,6 @@
     [com.fulcrologic.statecharts.integration.fulcro :as scf]
     [com.fulcrologic.statecharts.integration.fulcro.ui-routes :as uir]
     [com.fulcrologic.statecharts.integration.fulcro.ui-routes-options :as ro]
-    [com.fulcrologic.statecharts.visualization.visualizer :as viz]
     [com.wsscode.pathom.connect :as pc]
     [com.wsscode.pathom.core :as p]
     [fulcro.inspect.tool :as it]
@@ -37,15 +36,14 @@
 
 (defonce app (app/fulcro-app {#_#_:remotes {:remote (msr/mock-http-server {:parser parser})}}))
 
-(defsc Root [this {:ui/keys [visualizer]}]
-  {:query         [(scf/statechart-session-ident uir/session-id)
-                   {:ui/visualizer (comp/get-query viz/Visualizer)}]
-   :initial-state {:ui/visualizer {:chart-id ::uir/chart}}}
+(defsc Root [this props]
+  {:query         [(scf/statechart-session-ident uir/session-id)]
+   :initial-state {}}
   (let [route-denied? (uir/route-denied? this)]
     (div :.ui.container
       (h2 "Root")
       (dom/pre {}
-        (str
+        (str "ROOT QUERY"
           (with-out-str
             (pprint (comp/get-query this)))
           "\nConfig: "
@@ -104,15 +102,15 @@
    ro/statechart (statechart {}
                    (state {:id :top}
                      #_(on-entry {}
-                       (script-fn [env & _]
-                         (let [id       (tempid/tempid)
-                               my-ident [:thing/id id]
-                               thing    {:thing/id    id
-                                         :thing/value 42}]
-                           (merge/merge-component! app RouteA21 thing)
-                           (scf/send! env (senv/parent-session-id env)
-                             :event/child-ident-changed {:ident my-ident})
-                           nil)))
+                         (script-fn [env & _]
+                           (let [id       (tempid/tempid)
+                                 my-ident [:thing/id id]
+                                 thing    {:thing/id    id
+                                           :thing/value 42}]
+                             (merge/merge-component! app RouteA21 thing)
+                             (scf/send! env (senv/parent-session-id env)
+                               :event/child-ident-changed {:ident my-ident})
+                             nil)))
                      (on-exit {}
                        (script-fn [] (log/info "Exit top")))
                      (state {:id :red}
@@ -178,12 +176,21 @@
     (uir/routing-regions
       (uir/routes {:id           :region/routes
                    :routing/root Root}
-        (uir/rstate {:route/target `RouteA1})
-        (uir/rstate {:route/target `RouteA2}
-          (uir/istate {:route/target     `RouteA21
-                       :exit-target      ::RouteA1
-                       :child-session-id ::route-a21})
-          (uir/rstate {:route/target `RouteA22}))
+        ;; MUST resolve ambiguity by putting an explicit path
+        (parallel {}
+          (uir/rstate {:route/target `RouteA1
+                       :initial      :route/a}
+            (uir/rstate {:id :route/a})
+            (uir/rstate {:id :other}))
+          (uir/rstate {:route/target `RouteA2
+                       :route/path   ["c"]}
+            (uir/rstate {:id         :route/c
+                         :route/path "A"})
+            (uir/istate {:route/target     `RouteA21
+                         :route/path       ["B"]
+                         :exit-target      ::RouteA1
+                         :child-session-id ::route-a21})
+            (uir/rstate {:route/target `RouteA22})))
         (uir/rstate {:parallel?    true
                      :route/target `RouteA3}
           (uir/rstate {:route/target `RouteA31})
@@ -195,8 +202,6 @@
   (app/force-root-render! app))
 
 (defn init []
-  (log/merge-config! {:output-fn prefix-output-fn
-                      :appenders {:console (console-appender)}})
   (log/info "Starting App")
   (it/add-fulcro-inspect! app)
   (app/set-root! app Root {:initialize-state? true})
