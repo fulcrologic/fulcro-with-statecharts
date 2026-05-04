@@ -2,25 +2,25 @@
   (:require
     [com.example.components.auto-resolvers :refer [automatic-resolvers]]
     [com.example.components.blob-store :as bs]
-    [com.example.lib.pathom.pathom-registry :as reg]
     [com.example.components.config :refer [config]]
     [com.example.components.datomic :refer [datomic-connections]]
     [com.example.components.delete-middleware :as delete]
     [com.example.components.save-middleware :as save]
+    [com.example.lib.pathom.pathom-registry :as reg]
     [com.example.model-rad.model :refer [all-attributes]]
     [com.example.model.account]
-    [com.example.model.item]
     [com.example.model.invoice]
+    [com.example.model.item]
     [com.example.model.timezone]
     [com.fulcrologic.rad.attributes :as attr]
     [com.fulcrologic.rad.blob :as blob]
     [com.fulcrologic.rad.database-adapters.datomic-cloud :as datomic]
     [com.fulcrologic.rad.form :as form]
     [com.fulcrologic.rad.pathom :as pathom]
-    [mount.core :refer [defstate]]
-    [com.wsscode.pathom.core :as p]
     [com.fulcrologic.rad.type-support.date-time :as dt]
-    [com.wsscode.pathom.connect :as pc]))
+    [com.wsscode.pathom.connect :as pc]
+    [com.wsscode.pathom.core :as p]
+    [mount.core :refer [defstate]]))
 
 (pc/defresolver index-explorer [{::pc/keys [indexes]} _]
   {::pc/input  #{:com.wsscode.pathom.viz.index-explorer/id}

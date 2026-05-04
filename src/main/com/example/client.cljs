@@ -2,6 +2,9 @@
   (:require
     [com.example.model.account :as m.account]
     [com.example.ui :refer [LandingPage Root]]
+    [com.example.ui.account-forms]
+    [com.example.ui.invoice-forms]
+    [com.example.ui.item-forms]
     [com.example.ui.login-dialog :refer [LoginForm]]
     [com.fulcrologic.fulcro.algorithms.timbre-support :refer [console-appender prefix-output-fn]]
     [com.fulcrologic.fulcro.algorithms.tx-processing.batched-processing :as btxn]
@@ -9,6 +12,7 @@
     [com.fulcrologic.fulcro.components :refer [defsc]]
     [com.fulcrologic.rad.application :as rad-app]
     [com.fulcrologic.rad.rendering.semantic-ui.semantic-ui-controls :as sui]
+    [com.fulcrologic.rad.statechart.form :as sc-form]
     [com.fulcrologic.rad.statechart.report :as report]
     [com.fulcrologic.rad.type-support.date-time :as datetime]
     [com.fulcrologic.statecharts.chart :refer [statechart]]
@@ -65,22 +69,21 @@
         session-management-nodes
 
         (state {:id :state/logged-in}
-          (uir/istate {:route/target  `com.example.ui.account-forms/AccountList
-                       :route/segment "accounts"})
-          (uir/istate {:route/target  `com.example.ui.master-detail/AccountList
-                       :route/segment "master-detail"})
-          (uir/istate {:route/target  `com.example.ui.item-forms/InventoryReport
-                       :route/segment "items"})
-          (uir/istate {:route/target  `com.example.ui.invoice-forms/InvoiceList
-                       :route/segment "invoices"})
-          (uir/istate {:route/target  `com.example.ui.invoice-forms/AccountInvoices
-                       :route/segment "account-invoices"})
-          (uir/istate {:route/target  `com.example.ui.item-forms/ItemForm
-                       :route/segment "item"})
-          (uir/istate {:route/target  `com.example.ui.invoice-forms/InvoiceForm
-                       :route/segment "invoice"})
-          (uir/istate {:route/target  `com.example.ui.account-forms/AccountForm
-                       :route/segment "account"}))))))
+          (report/report-route-state {:route/target  `com.example.ui.account-forms/AccountList
+                                      :route/segment "accounts"})
+
+          (report/report-route-state {:route/target  `com.example.ui.item-forms/InventoryReport
+                                      :route/segment "items"})
+          (report/report-route-state {:route/target  `com.example.ui.invoice-forms/InvoiceList
+                                      :route/segment "invoices"})
+          (report/report-route-state {:route/target  `com.example.ui.invoice-forms/AccountInvoices
+                                      :route/segment "account-invoices"})
+          (sc-form/form-route-state {:route/target  `com.example.ui.item-forms/ItemForm
+                                     :route/segment "item"})
+          (sc-form/form-route-state {:route/target  `com.example.ui.invoice-forms/InvoiceForm
+                                     :route/segment "invoice"})
+          (sc-form/form-route-state {:route/target  `com.example.ui.account-forms/AccountForm
+                                     :route/segment "account"}))))))
 
 (defn refresh []
   ;; hot code reload of installed controls
@@ -89,7 +92,8 @@
   ;(uir/update-chart! app application-chart)
   (app/force-root-render! app))
 
-(defn init []
+(defn ^:export init []
+
   (it/add-fulcro-inspect! app)
   (log/merge-config! {:output-fn prefix-output-fn
                       :appenders {:console (console-appender)}})
@@ -99,6 +103,8 @@
   ;; Avoid startup async timing issues by pre-initializing things before mount
   (app/set-root! app Root {:initialize-state? true})
   (setup-RAD app)
-  (scf/install-fulcro-statecharts! app)
+  (scf/install-fulcro-statecharts! app
+    {:on-save (fn [session-id wmem] (uir/url-sync-on-save session-id wmem app))})
   (uir/start! app application-chart)
+  (uir/install-url-sync! app)
   (app/mount! app Root "app" {:initialize-state? false}))

@@ -15,7 +15,7 @@
    (defresolver customer-id [env {:invoice/keys [id]}]
      {::pc/input  #{:invoice/id}
       ::pc/output [:account/id]
-      :check (constantly true)}
+      :check      (constantly true)}
      {:account/id (queries/get-invoice-customer-id env id)}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

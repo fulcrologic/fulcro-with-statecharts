@@ -1,10 +1,10 @@
 (ns com.example.components.server
   (:require
-    [org.httpkit.server :refer [run-server]]
-    [mount.core :as mount :refer [defstate]]
-    [taoensso.timbre :as log]
     [com.example.components.config :refer [config]]
-    [com.example.components.ring-middleware :refer [middleware]]))
+    [com.example.components.ring-middleware :refer [middleware]]
+    [mount.core :as mount :refer [defstate]]
+    [org.httpkit.server :refer [run-server]]
+    [taoensso.timbre :as log]))
 
 (defstate http-server
   :start

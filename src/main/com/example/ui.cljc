@@ -60,8 +60,8 @@
                    (ui-dropdown-item {:onClick (fn [] (sc.form/create! this InvoiceForm))} "New")
                    (ui-dropdown-item {:onClick (fn [] (uir/route-to! this AccountInvoices {:account/id (new-uuid 101)}))} "Invoices for Account 101")))
                #_(ui-dropdown {:className "item" :text "Reports"}
-                 (ui-dropdown-menu {}
-                   (ui-dropdown-item {:onClick (fn [] (uir/route-to! this mdetail/AccountList {}))} "Master Detail"))))))
+                   (ui-dropdown-menu {}
+                     (ui-dropdown-item {:onClick (fn [] (uir/route-to! this mdetail/AccountList {}))} "Master Detail"))))))
 
         (div :.right.menu
           (div :.item

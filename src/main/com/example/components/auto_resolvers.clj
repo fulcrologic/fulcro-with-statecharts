@@ -1,9 +1,9 @@
 (ns com.example.components.auto-resolvers
   (:require
     [com.example.model-rad.model :refer [all-attributes]]
-    [mount.core :refer [defstate]]
+    [com.fulcrologic.rad.database-adapters.datomic-cloud :as datomic]
     [com.fulcrologic.rad.resolvers :as res]
-    [com.fulcrologic.rad.database-adapters.datomic-cloud :as datomic]))
+    [mount.core :refer [defstate]]))
 
 (defstate automatic-resolvers
   :start

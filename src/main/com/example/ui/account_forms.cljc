@@ -11,10 +11,10 @@
     [com.fulcrologic.fulcro.algorithms.form-state :as fs]
     [com.fulcrologic.fulcro.components :as comp :refer [defsc]]
     [com.fulcrologic.rad.blob :as blob]
-    [com.fulcrologic.rad.control :as control]
+    [com.fulcrologic.rad.statechart.control :as control]
     [com.fulcrologic.rad.form :as form]
     [com.fulcrologic.rad.form-options :as fo]
-    [com.fulcrologic.rad.report :as report]
+    [com.fulcrologic.rad.statechart.report :as report]
     [com.fulcrologic.rad.report-options :as ro]
     [com.fulcrologic.rad.semantic-ui-options :as suo]))
 

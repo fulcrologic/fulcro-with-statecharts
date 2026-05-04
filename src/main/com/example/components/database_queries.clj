@@ -2,15 +2,15 @@
   (:require
     [com.fulcrologic.rad.database-adapters.datomic-options :as do]
     [datomic.client.api :as d]
-    [taoensso.timbre :as log]
-    [taoensso.encore :as enc]))
+    [taoensso.encore :as enc]
+    [taoensso.timbre :as log]))
 
 (defn- env->db [env]
   (some-> env (get-in [do/databases :production]) (deref)))
 
 (defn get-all-tags
   [env _]
-  (let [db (doto (env->db env) assert)
+  (let [db  (doto (env->db env) assert)
         ids (d/q '[:find ?uuid :where [?dbid :tag/id ?uuid]] db)]
     (mapv (fn [[id]] {:tag/id id}) ids)))
 

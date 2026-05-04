@@ -10,8 +10,7 @@
     [hiccup.page :refer [html5]]
     [mount.core :refer [defstate]]
     [ring.middleware.defaults :refer [wrap-defaults]]
-    [ring.util.response :as resp]
-    [taoensso.timbre :as log]))
+    [ring.util.response :as resp]))
 
 (defn index [csrf-token]
   (html5
@@ -46,9 +45,9 @@
 (defn wrap-html-routes [ring-handler]
   (fn [{:keys [uri anti-forgery-token] :as req}]
     (if (or (str/starts-with? uri "/api")
-          (str/starts-with? uri "/images") ; perm store. For preview of uploads after file save
+          (str/starts-with? uri "/images")                  ; perm store. For preview of uploads after file save
           (str/starts-with? uri "/files")
-          (str/starts-with? uri "/preview") ; temporary store. For preview of uploads before file save
+          (str/starts-with? uri "/preview")                 ; temporary store. For preview of uploads before file save
           (str/starts-with? uri "/js"))
       (ring-handler req)
 

@@ -1,8 +1,8 @@
 (ns com.example.components.config
   (:require
-    [com.fulcrologic.fulcro.server.config :as fserver]
     [com.example.lib.logging :as logging]
-    [mount.core :refer [defstate args]]
+    [com.fulcrologic.fulcro.server.config :as fserver]
+    [mount.core :refer [args defstate]]
     [taoensso.timbre :as log]))
 
 (defstate config

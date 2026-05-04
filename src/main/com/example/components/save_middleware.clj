@@ -1,9 +1,9 @@
 (ns com.example.components.save-middleware
   (:require
-    [com.fulcrologic.rad.middleware.save-middleware :as r.s.middleware]
-    [com.fulcrologic.rad.database-adapters.datomic-cloud :as datomic]
+    [com.example.model-rad.model :as model]
     [com.fulcrologic.rad.blob :as blob]
-    [com.example.model-rad.model :as model]))
+    [com.fulcrologic.rad.database-adapters.datomic-cloud :as datomic]
+    [com.fulcrologic.rad.middleware.save-middleware :as r.s.middleware]))
 
 (defn wrap-exceptions-as-form-errors
   ([handler]

@@ -2,7 +2,6 @@
 
  :deps    {com.fulcrologic/fulcro                 {:mvn/version "3.9.5"}
            com.fulcrologic/fulcro-rad             {:mvn/version "1.6.23"}
-           com.fulcrologic/fulcro-rad-semantic-ui {:mvn/version "1.4.8"}
            com.fulcrologic/fulcro-i18n            {:mvn/version "1.1.2"}
            com.fulcrologic/fulcro-rad-datomic     {:mvn/version "1.5.6"}
            com.fulcrologic/fulcro-rad-statecharts {:mvn/version "0.1.2"}

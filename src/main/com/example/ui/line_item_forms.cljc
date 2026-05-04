@@ -6,11 +6,12 @@
     [com.example.ui.item-forms :as item-forms]
     [com.fulcrologic.fulcro.algorithms.normalized-state :as fns]
     [com.fulcrologic.fulcro.components :as comp]
-    [com.fulcrologic.fulcro.ui-state-machines :as uism]
-    [com.fulcrologic.rad.statechart.form :as form]
     [com.fulcrologic.rad.form-options :as fo]
     [com.fulcrologic.rad.picker-options :as picker-options]
-    [com.fulcrologic.rad.type-support.decimal :as math]))
+    [com.fulcrologic.rad.statechart.form :as form]
+    [com.fulcrologic.rad.statechart.form-options :as sfo]
+    [com.fulcrologic.rad.type-support.decimal :as math]
+    [com.fulcrologic.statecharts.integration.fulcro.operations :as fops]))
 
 (defn add-subtotal* [{:line-item/keys [quantity quoted-price] :as item}]
   (assoc item :line-item/subtotal (math/* quantity quoted-price)))
@@ -22,22 +23,22 @@
    fo/route-prefix  "line-item"
    fo/title         "Line Items"
    fo/layout        [[:line-item/category :line-item/item :line-item/quantity :line-item/quoted-price :line-item/subtotal]]
-   fo/triggers      {:derive-fields (fn [new-form-tree] (add-subtotal* new-form-tree))
-                     ;; TASK: Trigger not using uism env
-                     #_#_:on-change     (fn [{::uism/keys [state-map fulcro-app] :as uism-env} form-ident k old-value new-value]
-                                      (case k
-                                        :line-item/category
-                                        (let [cls         (comp/ident->any fulcro-app form-ident)
-                                              target-path (conj form-ident :line-item/item)
-                                              props       (fns/ui->props state-map cls form-ident)]
-                                          (picker-options/load-options! fulcro-app cls props line-item/item)
-                                          (-> uism-env
-                                            (uism/apply-action assoc-in target-path nil)))
-                                        :line-item/item
-                                        (let [item-price  (get-in state-map (conj new-value :item/price))
-                                              target-path (conj form-ident :line-item/quoted-price)]
-                                          (uism/apply-action uism-env assoc-in target-path item-price))
-                                        uism-env))}
+   sfo/triggers     {:derive-fields (fn [new-form-tree] (add-subtotal* new-form-tree))
+                     :on-change     (fn [env data form-ident k _old new-value]
+                                      (let [app       (:fulcro/app env)
+                                            state-map (:fulcro/state-map data)]
+                                        (case k
+                                          :line-item/category
+                                          (let [cls         (comp/ident->any app form-ident)
+                                                target-path (conj form-ident :line-item/item)
+                                                props       (fns/ui->props state-map cls form-ident)]
+                                            (picker-options/load-options! app cls props line-item/item)
+                                            [(fops/apply-action assoc-in target-path nil)])
+                                          :line-item/item
+                                          (let [item-price  (get-in state-map (conj new-value :item/price))
+                                                target-path (conj form-ident :line-item/quoted-price)]
+                                            [(fops/apply-action assoc-in target-path item-price)])
+                                          nil)))}
    fo/field-styles  {:line-item/item     :pick-one
                      :line-item/category :pick-one}
    fo/field-options {:line-item/category {::picker-options/query-key       :category/all-categories

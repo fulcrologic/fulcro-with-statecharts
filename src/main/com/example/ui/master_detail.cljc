@@ -10,7 +10,7 @@
     [com.fulcrologic.fulcro.components :as comp]
     [com.fulcrologic.fulcro.mutations :refer [defmutation]]
     [com.fulcrologic.fulcro.ui-state-machines :as uism :refer [defstatemachine]]
-    [com.fulcrologic.rad.control :as control]
+    [com.fulcrologic.rad.statechart.control :as control]
     [com.fulcrologic.rad.statechart.form :as form]
     [com.fulcrologic.rad.form-options :as fo]
     [com.fulcrologic.rad.statechart.report :as report]

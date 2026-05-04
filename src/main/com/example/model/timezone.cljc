@@ -639,7 +639,7 @@
 #?(:clj
    (defresolver all-time-zones [{:keys [query-params]} _]
      {::pc/output [{:autocomplete/time-zone-options [:text :value]}]
-      :check (constantly true)}
+      :check      (constantly true)}
      (let [{:keys [only search-string]} query-params]
        {:autocomplete/time-zone-options
         (cond

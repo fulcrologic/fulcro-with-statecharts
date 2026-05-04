@@ -5,7 +5,7 @@
     [com.example.model-rad.item :as item]
     [com.example.model-rad.category :as category]
     [com.fulcrologic.fulcro.components :refer [defsc]]
-    [com.fulcrologic.rad.control :as control]
+    [com.fulcrologic.rad.statechart.control :as control]
     [com.fulcrologic.rad.statechart.form :as sc.form]
     [com.fulcrologic.rad.form-options :as fo]
     [com.fulcrologic.rad.picker-options :as picker-options]
@@ -74,4 +74,6 @@
                                              (sc.report/filter-rows! this))}
 
    ro/run-on-mount?       true
+   ro/page-size           5
+   ro/paginate?           true
    ro/route               "item-inventory-report"})

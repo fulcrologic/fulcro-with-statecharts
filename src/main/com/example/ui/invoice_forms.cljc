@@ -15,6 +15,7 @@
     [com.example.ui.line-item-forms :refer [LineItemForm]]
     [com.example.ui.account-forms :refer [BriefAccountForm AccountForm]]
     [com.fulcrologic.rad.form-options :as fo]
+    [com.fulcrologic.rad.statechart.form-options :as sfo]
     [com.fulcrologic.statecharts.integration.fulcro.routing :as uir]
     [com.fulcrologic.rad.statechart.form :as sc.form]
     [com.fulcrologic.rad.type-support.date-time :as datetime]
@@ -72,7 +73,7 @@
    fo/subforms       {:invoice/line-items {fo/ui          LineItemForm
                                            fo/can-delete? (fn [_ _] true)
                                            fo/can-add?    (fn [_ _] true)}}
-   fo/triggers       {:derive-fields (fn [new-form-tree] (sum-subtotals* new-form-tree))}
+   sfo/triggers      {:derive-fields (fn [new-form-tree] (sum-subtotals* new-form-tree))}
    fo/cancel-route   `InvoiceList
    fo/title          (fn [_ {:invoice/keys [id]}]
                        (if (tempid/tempid? id)

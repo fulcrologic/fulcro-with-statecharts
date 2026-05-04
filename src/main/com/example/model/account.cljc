@@ -41,7 +41,6 @@
       :check      (constantly true)}
      {:account/invoices (queries/get-customer-invoices env (:query-params env))}))
 
-
 #?(:clj
    (defmutation set-account-active [env {:account/keys [id active?]}]
      {:check (constantly true)}
@@ -51,7 +50,7 @@
    (m/defmutation set-account-active [{:account/keys [id active?]}]
      (remote [e]
        (-> e
-         (m/returning (rc/nc [:account/id :account/active]))))))
+         (m/returning (rc/nc [:account/id :account/active?]))))))
 
 #?(:clj
    (defmutation login [env {:account/keys [email password]}]

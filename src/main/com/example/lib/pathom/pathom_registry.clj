@@ -1,7 +1,7 @@
 (ns com.example.lib.pathom.pathom-registry
   (:require
-    [taoensso.timbre :as log]
-    [com.wsscode.pathom.connect :as pc]))
+    [com.wsscode.pathom.connect :as pc]
+    [taoensso.timbre :as log]))
 
 (defonce pathom-registry (atom {}))
 
