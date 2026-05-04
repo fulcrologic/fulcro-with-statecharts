@@ -8,20 +8,17 @@
                [com.fulcrologic.semantic-ui.modules.modal.ui-modal-actions :refer [ui-modal-actions]]])
     #?(:clj  [com.fulcrologic.fulcro.dom-server :as dom :refer [div label input]]
        :cljs [com.fulcrologic.fulcro.dom :as dom :refer [div label input]])
-    [clojure.pprint :refer [pprint]]
     [com.example.ui.account-forms :refer [AccountForm AccountList]]
     [com.example.ui.invoice-forms :refer [InvoiceForm InvoiceList AccountInvoices]]
     [com.example.ui.item-forms :refer [ItemForm InventoryReport]]
-    [com.example.ui.master-detail :as mdetail]
+    ;[com.example.ui.master-detail :as mdetail]
     [com.fulcrologic.fulcro.application :as app]
     [com.fulcrologic.fulcro.components :as comp :refer [defsc]]
     [com.fulcrologic.fulcro.dom.html-entities :as ent]
     [com.fulcrologic.rad.ids :refer [new-uuid]]
-
+    [com.fulcrologic.rad.statechart.form :as sc.form]
     [com.fulcrologic.statecharts.integration.fulcro :as scf]
-    [com.fulcrologic.statecharts.integration.fulcro.rad-integration :as ri]
-    [com.fulcrologic.statecharts.integration.fulcro.ui-routes :as uir]
-    [com.fulcrologic.statecharts.integration.fulcro.route-history :as srh]
+    [com.fulcrologic.statecharts.integration.fulcro.routing :as uir]
     [taoensso.timbre :as log]))
 
 (defsc LandingPage [this props]
@@ -52,17 +49,17 @@
                (ui-dropdown {:className "item" :text "Account"}
                  (ui-dropdown-menu {}
                    (ui-dropdown-item {:onClick (fn [] (uir/route-to! this AccountList {}))} "View All")
-                   (ui-dropdown-item {:onClick (fn [] (ri/create! this AccountForm))} "New")))
+                   (ui-dropdown-item {:onClick (fn [] (sc.form/create! this AccountForm))} "New")))
                (ui-dropdown {:className "item" :text "Inventory"}
                  (ui-dropdown-menu {}
                    (ui-dropdown-item {:onClick (fn [] (uir/route-to! this InventoryReport {}))} "View All")
-                   (ui-dropdown-item {:onClick (fn [] (ri/create! this ItemForm))} "New")))
+                   (ui-dropdown-item {:onClick (fn [] (sc.form/create! this ItemForm))} "New")))
                (ui-dropdown {:className "item" :text "Invoices"}
                  (ui-dropdown-menu {}
                    (ui-dropdown-item {:onClick (fn [] (uir/route-to! this InvoiceList {}))} "View All")
-                   (ui-dropdown-item {:onClick (fn [] (ri/create! this InvoiceForm))} "New")
+                   (ui-dropdown-item {:onClick (fn [] (sc.form/create! this InvoiceForm))} "New")
                    (ui-dropdown-item {:onClick (fn [] (uir/route-to! this AccountInvoices {:account/id (new-uuid 101)}))} "Invoices for Account 101")))
-               (ui-dropdown {:className "item" :text "Reports"}
+               #_(ui-dropdown {:className "item" :text "Reports"}
                  (ui-dropdown-menu {}
                    (ui-dropdown-item {:onClick (fn [] (uir/route-to! this mdetail/AccountList {}))} "Master Detail"))))))
 
@@ -81,7 +78,4 @@
               (dom/button :.ui.primary.button #_{:onClick #(auth/authenticate! this :local nil)}
                 "Login")))))
       (div :.ui.container.segment nil
-        (div :.ui.basic.segment nil
-          (dom/pre nil
-            (with-out-str (pprint (srh/url->route)))))
         (uir/ui-current-subroute this comp/factory)))))

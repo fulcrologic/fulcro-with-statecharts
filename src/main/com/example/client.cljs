@@ -1,34 +1,26 @@
 (ns com.example.client
   (:require
-    [clojure.pprint :refer [pprint]]
+    [com.example.model.account :as m.account]
+    [com.example.ui :refer [LandingPage Root]]
+    [com.example.ui.login-dialog :refer [LoginForm]]
     [com.fulcrologic.fulcro.algorithms.timbre-support :refer [console-appender prefix-output-fn]]
     [com.fulcrologic.fulcro.algorithms.tx-processing.batched-processing :as btxn]
     [com.fulcrologic.fulcro.application :as app]
-    [com.fulcrologic.fulcro.components :as comp :refer [defsc]]
-    [com.fulcrologic.fulcro.dom :as dom :refer [button div h2 h3 h4]]
-    [com.fulcrologic.fulcro.mutations :as m]
-    [com.fulcrologic.fulcro.react.version18 :refer [with-react18]]
+    [com.fulcrologic.fulcro.components :refer [defsc]]
     [com.fulcrologic.rad.application :as rad-app]
     [com.fulcrologic.rad.rendering.semantic-ui.semantic-ui-controls :as sui]
-    [com.fulcrologic.rad.report :as report]
+    [com.fulcrologic.rad.statechart.report :as report]
     [com.fulcrologic.rad.type-support.date-time :as datetime]
-    [com.fulcrologic.statecharts :as sc]
     [com.fulcrologic.statecharts.chart :refer [statechart]]
     [com.fulcrologic.statecharts.data-model.operations :as ops]
-    [com.fulcrologic.statecharts.elements :as ele :refer [entry-fn exit-fn on-entry on-exit parallel script script-fn state transition]]
+    [com.fulcrologic.statecharts.elements :refer [entry-fn exit-fn on-entry on-exit parallel script script-fn state transition]]
     [com.fulcrologic.statecharts.integration.fulcro :as scf]
     [com.fulcrologic.statecharts.integration.fulcro.operations :as fops]
-    [com.fulcrologic.statecharts.integration.fulcro.ui-routes :as uir]
-    [com.fulcrologic.statecharts.integration.fulcro.rad-integration :as ri]
-    [com.fulcrologic.statecharts.integration.fulcro.ui-routes-options :as ro]
-    [com.example.ui :refer [Root LandingPage]]
-    [com.example.ui.login-dialog :refer [LoginForm]]
-    [com.example.model.account :as m.account]
+    [com.fulcrologic.statecharts.integration.fulcro.routing :as uir]
     [fulcro.inspect.tool :as it]
     [taoensso.timbre :as log]))
 
 (defonce app (-> (rad-app/fulcro-rad-app {})
-               (with-react18)
                (btxn/with-batched-reads)))
 
 (defn setup-RAD [app]
@@ -73,29 +65,28 @@
         session-management-nodes
 
         (state {:id :state/logged-in}
-          (ri/report-state {:route/target `com.example.ui.account-forms/AccountList
-                            :route/path   ["accounts"]})
-          (ri/report-state {:route/target `com.example.ui.master-detail/AccountList
-                            :route/path   ["master-detail"]})
-          (ri/report-state {:route/target `com.example.ui.item-forms/InventoryReport
-                            :route/path   ["items"]})
-          (ri/report-state {:route/target `com.example.ui.invoice-forms/InvoiceList
-                            :route/path   ["invoices"]})
-          (ri/report-state {:route/target      `com.example.ui.invoice-forms/AccountInvoices
-                            :report/param-keys [:account/id]
-                            :route/path        ["account-invoices"]})
-          (ri/form-state {:route/target `com.example.ui.item-forms/ItemForm
-                          :route/path   ["item"]})
-          (ri/form-state {:route/target `com.example.ui.invoice-forms/InvoiceForm
-                          :route/path   ["invoice"]})
-          (ri/form-state {:route/target `com.example.ui.account-forms/AccountForm
-                          :route/path   ["account"]}))))))
+          (uir/istate {:route/target  `com.example.ui.account-forms/AccountList
+                       :route/segment "accounts"})
+          (uir/istate {:route/target  `com.example.ui.master-detail/AccountList
+                       :route/segment "master-detail"})
+          (uir/istate {:route/target  `com.example.ui.item-forms/InventoryReport
+                       :route/segment "items"})
+          (uir/istate {:route/target  `com.example.ui.invoice-forms/InvoiceList
+                       :route/segment "invoices"})
+          (uir/istate {:route/target  `com.example.ui.invoice-forms/AccountInvoices
+                       :route/segment "account-invoices"})
+          (uir/istate {:route/target  `com.example.ui.item-forms/ItemForm
+                       :route/segment "item"})
+          (uir/istate {:route/target  `com.example.ui.invoice-forms/InvoiceForm
+                       :route/segment "invoice"})
+          (uir/istate {:route/target  `com.example.ui.account-forms/AccountForm
+                       :route/segment "account"}))))))
 
 (defn refresh []
   ;; hot code reload of installed controls
   (log/info "Reinstalling controls")
   (setup-RAD app)
-  (uir/update-chart! app application-chart)
+  ;(uir/update-chart! app application-chart)
   (app/force-root-render! app))
 
 (defn init []
@@ -109,5 +100,5 @@
   (app/set-root! app Root {:initialize-state? true})
   (setup-RAD app)
   (scf/install-fulcro-statecharts! app)
-  (uir/start-routing! app application-chart)
+  (uir/start! app application-chart)
   (app/mount! app Root "app" {:initialize-state? false}))

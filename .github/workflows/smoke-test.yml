@@ -35,7 +35,7 @@ jobs:
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@10.1
         with:
-          cli: '1.11.1.1208'
+          cli: '1.12.4.1629'
       - name: Setup Babashka
         uses: turtlequeue/setup-babashka@v1.5.0
         with:
@@ -46,7 +46,7 @@ jobs:
         run: |
           echo "XDG_CONFIG_HOME=$XDG_CONFIG_HOME, CLJ_CONFIG=$CLJ_CONFIG"
           test -d ~/.m2 || mkdir ~/.m2
-          echo ${{ secrets.SECRET_BASE64_SETTINGS_XML }} | base64 --decode > ~/.m2/settings.xml          
+          echo ${{ secrets.SECRET_BASE64_SETTINGS_XML }} | base64 --decode > ~/.m2/settings.xml
           #NOTE: Adding the repo to user deps.edn should suffice but somehow doesn't work in GA action :'(
           #export USER_DEPS=$(bb -e '(-> (shell/sh "clojure" "-Sdescribe") :out edn/read-string :config-user)')
           #export USER_DEPS_DIR=$(dirname $USER_DEPS)

@@ -4,20 +4,19 @@
        :cljs [com.fulcrologic.fulcro.dom :as dom])
     [com.example.model-rad.item :as item]
     [com.example.model-rad.category :as category]
-    [com.fulcrologic.statecharts.integration.fulcro.rad-integration :as ri]
     [com.fulcrologic.fulcro.components :refer [defsc]]
     [com.fulcrologic.rad.control :as control]
-    [com.fulcrologic.rad.form :as form]
+    [com.fulcrologic.rad.statechart.form :as sc.form]
     [com.fulcrologic.rad.form-options :as fo]
     [com.fulcrologic.rad.picker-options :as picker-options]
-    [com.fulcrologic.rad.report :as report]
+    [com.fulcrologic.rad.statechart.report :as sc.report]
     [com.fulcrologic.rad.report-options :as ro]))
 
 (defsc CategoryQuery [_ _]
   {:query [:category/id :category/label]
    :ident :category/id})
 
-(form/defsc-form ItemForm [this props]
+(sc.form/defsc-form ItemForm [this props]
   {fo/id            item/id
    fo/attributes    [item/item-name
                      item/category
@@ -35,13 +34,13 @@
    fo/cancel-route  ::InventoryReport
    fo/title         "Edit Item"})
 
-(report/defsc-report InventoryReport [this props]
+(sc.report/defsc-report InventoryReport [this props]
   {ro/title               "Inventory Report"
    ro/source-attribute    :item/all-items
    ro/row-pk              item/id
    ro/columns             [item/item-name category/label item/price item/in-stock]
    ro/column-formatters   {:item/name (fn [this _ {:item/keys [id name]}]
-                                        (dom/a {:onClick (fn [] (ri/edit! this ItemForm id))}
+                                        (dom/a {:onClick (fn [] (sc.form/edit! this ItemForm id))}
                                           (str name)))}
 
    ro/row-visible?        (fn [filter-parameters row] (let [{::keys [category]} filter-parameters
@@ -53,7 +52,7 @@
                                        :local?                        true
                                        :label                         "Category"
                                        :default-value                 ""
-                                       :action                        (fn [this] (report/filter-rows! this))
+                                       :action                        (fn [this] (sc.report/filter-rows! this))
                                        picker-options/cache-time-ms   30000
                                        picker-options/cache-key       :all-category-options
                                        picker-options/query-key       :category/all-categories
@@ -72,7 +71,7 @@
 
    ro/links               {:category/label (fn [this {:category/keys [label]}]
                                              (control/set-parameter! this ::category label)
-                                             (report/filter-rows! this))}
+                                             (sc.report/filter-rows! this))}
 
    ro/run-on-mount?       true
    ro/route               "item-inventory-report"})

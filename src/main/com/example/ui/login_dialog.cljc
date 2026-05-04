@@ -1,16 +1,14 @@
 (ns com.example.ui.login-dialog
   (:require
-    [com.example.model.account :as account]
     #?@(:clj  [[com.fulcrologic.fulcro.dom-server :refer [div label input]]]
         :cljs [[com.fulcrologic.semantic-ui.modules.modal.ui-modal :refer [ui-modal]]
                [com.fulcrologic.semantic-ui.modules.modal.ui-modal-header :refer [ui-modal-header]]
                [com.fulcrologic.fulcro.dom :refer [div label input]]
                [com.fulcrologic.semantic-ui.modules.modal.ui-modal-content :refer [ui-modal-content]]])
     [com.fulcrologic.fulcro.components :as comp :refer [defsc]]
-    [com.fulcrologic.rad.authorization :as auth]
     [com.fulcrologic.fulcro.mutations :as m]
     [com.fulcrologic.statecharts.integration.fulcro :as scf]
-    [com.fulcrologic.statecharts.integration.fulcro.ui-routes :as uir]
+    [com.fulcrologic.statecharts.integration.fulcro.routing :as uir]
     [taoensso.timbre :as log]))
 
 (defsc LoginForm [this {:ui/keys [username password] :as props}]

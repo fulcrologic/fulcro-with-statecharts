@@ -14,12 +14,11 @@
     [com.fulcrologic.fulcro.algorithms.form-state :as fs]
     [com.example.ui.line-item-forms :refer [LineItemForm]]
     [com.example.ui.account-forms :refer [BriefAccountForm AccountForm]]
-    [com.fulcrologic.rad.form :as form]
     [com.fulcrologic.rad.form-options :as fo]
-    [com.fulcrologic.statecharts.integration.fulcro.ui-routes :as uir]
-    [com.fulcrologic.statecharts.integration.fulcro.rad-integration :as ri]
+    [com.fulcrologic.statecharts.integration.fulcro.routing :as uir]
+    [com.fulcrologic.rad.statechart.form :as sc.form]
     [com.fulcrologic.rad.type-support.date-time :as datetime]
-    [com.fulcrologic.rad.report :as report]
+    [com.fulcrologic.rad.statechart.report :as sc.report]
     [com.fulcrologic.rad.report-options :as ro]))
 
 (def invoice-validator (fs/make-validator (fn [form field]
@@ -40,7 +39,7 @@
                    (math/zero)
                    line-items)))
 
-(form/defsc-form InvoiceForm [this props]
+(sc.form/defsc-form InvoiceForm [this props]
   {fo/id             invoice/id
    ;; So, a special (attr/derived-value key type style) would be useful for form logic display
    ;::form/read-only?     true
@@ -82,14 +81,14 @@
 
 ;; Sample of report that can be generated on-the-fly at runtime. Looks just like normal report options, but could
 ;; be called in code using data derived from persistent storage, etc.
-(report/defsc-report AccountInvoices [this props]
+(sc.report/defsc-report AccountInvoices [this props]
   {ro/title             "Customer Invoices"
    ro/source-attribute  :account/invoices
    ro/row-pk            invoice/id
    ro/columns           [invoice/id invoice/date invoice/total]
    ro/column-headings   {:invoice/id "Invoice Number"}
    ro/column-formatters {:invoice/id (fn [this _ {:invoice/keys [id]}]
-                                       (dom/a {:onClick (fn [] (ri/edit! this InvoiceForm id))}
+                                       (dom/a {:onClick (fn [] (sc.form/edit! this InvoiceForm id))}
                                          (str id)))}
    ro/controls          {:account/id {:type   :uuid
                                       :local? true
@@ -98,7 +97,7 @@
 
    ro/run-on-mount?     true})
 
-(report/defsc-report InvoiceList [this props]
+(sc.report/defsc-report InvoiceList [this props]
   {ro/title               "All Invoices"
    ro/source-attribute    :invoice/all-invoices
    ro/row-pk              invoice/id
@@ -111,10 +110,10 @@
 
    ro/controls            {::new-invoice {:label  "New Invoice"
                                           :type   :button
-                                          :action (fn [this] (ri/create! this InvoiceForm))}
+                                          :action (fn [this] (sc.form/create! this InvoiceForm))}
                            ::new-account {:label  "New Account"
                                           :type   :button
-                                          :action (fn [this] (ri/create! this AccountForm))}}
+                                          :action (fn [this] (sc.form/create! this AccountForm))}}
 
    ro/control-layout      {:action-buttons [::new-invoice ::new-account]}
 
@@ -123,13 +122,13 @@
                                       (log/spy :info row)
                                       (uir/route-to! this AccountInvoices {:account/id id}))}
                            {:label  "Delete"
-                            :action (fn [this {:invoice/keys [id] :as row}] (form/delete! this :invoice/id id))}]
+                            :action (fn [this {:invoice/keys [id] :as row}] (sc.form/delete! this :invoice/id id))}]
 
    ro/column-formatters   {:invoice/id   (fn [this v {:invoice/keys [id]}]
-                                           (dom/a {:onClick #(ri/edit! this InvoiceForm id)}
+                                           (dom/a {:onClick #(sc.form/edit! this InvoiceForm id)}
                                              (str id)))
                            :account/name (fn [this v {:account/keys [id]}]
-                                           (dom/a {:onClick #(ri/edit! this AccountForm id)}
+                                           (dom/a {:onClick #(sc.form/edit! this AccountForm id)}
                                              (str v)))}
 
    ro/run-on-mount?       true

@@ -7,7 +7,7 @@
     [com.fulcrologic.fulcro.algorithms.normalized-state :as fns]
     [com.fulcrologic.fulcro.components :as comp]
     [com.fulcrologic.fulcro.ui-state-machines :as uism]
-    [com.fulcrologic.rad.form :as form]
+    [com.fulcrologic.rad.statechart.form :as form]
     [com.fulcrologic.rad.form-options :as fo]
     [com.fulcrologic.rad.picker-options :as picker-options]
     [com.fulcrologic.rad.type-support.decimal :as math]))
@@ -23,7 +23,8 @@
    fo/title         "Line Items"
    fo/layout        [[:line-item/category :line-item/item :line-item/quantity :line-item/quoted-price :line-item/subtotal]]
    fo/triggers      {:derive-fields (fn [new-form-tree] (add-subtotal* new-form-tree))
-                     :on-change     (fn [{::uism/keys [state-map fulcro-app] :as uism-env} form-ident k old-value new-value]
+                     ;; TASK: Trigger not using uism env
+                     #_#_:on-change     (fn [{::uism/keys [state-map fulcro-app] :as uism-env} form-ident k old-value new-value]
                                       (case k
                                         :line-item/category
                                         (let [cls         (comp/ident->any fulcro-app form-ident)

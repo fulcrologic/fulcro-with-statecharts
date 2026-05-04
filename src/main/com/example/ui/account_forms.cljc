@@ -6,7 +6,8 @@
     [com.example.model.account :as m.account]
     [com.example.model-rad.account :as account]
     [com.example.model-rad.model :as model]
-    [com.fulcrologic.statecharts.integration.fulcro.rad-integration :as ri]
+    [com.fulcrologic.rad.statechart.form :as sc.form]
+    [com.fulcrologic.rad.statechart.report :as sc.report]
     [com.fulcrologic.fulcro.algorithms.form-state :as fs]
     [com.fulcrologic.fulcro.components :as comp :refer [defsc]]
     [com.fulcrologic.rad.blob :as blob]
@@ -15,8 +16,7 @@
     [com.fulcrologic.rad.form-options :as fo]
     [com.fulcrologic.rad.report :as report]
     [com.fulcrologic.rad.report-options :as ro]
-    [com.fulcrologic.rad.semantic-ui-options :as suo]
-    [com.fulcrologic.statecharts.integration.fulcro.ui-routes :as uir]))
+    [com.fulcrologic.rad.semantic-ui-options :as suo]))
 
 #_(def account-validator
     "Here's how to make a validator, possibly to override a validation defined on the attributes.
@@ -42,7 +42,7 @@
 ;; data in forms when "mixing" server side "entities/tables/documents".
 
 
-(form/defsc-form AccountForm [this props]
+(sc.form/defsc-form AccountForm [this props]
   {fo/id              account/id
    fo/query-inclusion [(blob/status-key :account/avatar)    ; IMPORTANT: For image upload to "look right" you need to include these in your query
                        (blob/url-key :account/avatar)
@@ -54,7 +54,7 @@
    fo/cancel-route    `AccountList
    fo/title           "Edit Account"})
 
-(form/defsc-form BriefAccountForm [this props]
+(sc.form/defsc-form BriefAccountForm [this props]
   {fo/id             account/id
    fo/attributes     [account/name
                       account/role
@@ -80,7 +80,7 @@
       (dom/td :.right.aligned name)
       (dom/td (str active?))))
 
-(report/defsc-report AccountList [this props]
+(sc.report/defsc-report AccountList [this props]
   {ro/title               "All Accounts"
    ;; NOTE: You can uncomment these 3 lines to see how to switch over to using hand-written row rendering, with a list style
    ;::report/layout-style             :list
@@ -106,7 +106,7 @@
                                                                         1 "center aligned"
                                                                         "collapsing"))}
    ro/column-formatters   {:account/name    (fn [this v {:account/keys [id name]}]
-                                              (dom/a {:onClick (fn [] (ri/edit! this AccountForm id))}
+                                              (dom/a {:onClick (fn [] (sc.form/edit! this AccountForm id))}
                                                 (str name)))
                            :account/active? (fn [this v] (if v "Yes" "No"))}
    ro/column-headings     {:account/name "Account Name"}
@@ -129,7 +129,7 @@
    ro/controls            {::new-account   {:type   :button
                                             :local? true
                                             :label  "New Account"
-                                            :action (fn [this _] (ri/create! this AccountForm))}
+                                            :action (fn [this _] (sc.form/create! this AccountForm))}
                            ::search!       {:type   :button
                                             :local? true
                                             :label  "Filter"
