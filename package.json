@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "= Fulcro Sample using Statecharts",
   "main": "index.js",
-  "scripts": {},
+  "packageManager": "pnpm@11.21.0",
+  "scripts": {
+    "preinstall": "npx only-allow@1.2.2 pnpm"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/fulcrologic/fulcro-with-statecharts.git"
@@ -12,11 +15,11 @@
   "license": "MIT",
   "homepage": "https://github.com/fulcrologic/fulcro-with-statecharts",
   "dependencies": {
-    "@js-joda/core": "^5.6.3",
-    "@js-joda/timezone": "^2.21.1",
+    "@js-joda/core": "5.6.3",
+    "@js-joda/timezone": "2.21.1",
     "big.js": "6.2.2",
-    "intl-messageformat": "^10.7.6",
-    "elkjs": "^0.9.3",
+    "intl-messageformat": "10.7.6",
+    "elkjs": "0.9.3",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "semantic-ui-react": "2.1.5"
