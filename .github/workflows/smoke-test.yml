@@ -11,6 +11,7 @@ jobs:
      name: App smoke test
      runs-on: ubuntu-latest
      strategy:
+       fail-fast: false
        matrix:
         db_deps_alias: [asami, datomic, sql, xtdb]
      steps:
