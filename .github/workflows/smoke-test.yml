@@ -27,10 +27,10 @@ jobs:
             ~/.cpcache
             /opt/hostedtoolcache
           key: ${{ runner.os }}-${{ hashFiles('**/deps.edn') }}
-      - uses: actions/setup-java@v2
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
-          distribution: 'adopt'
-          java-version: 11
+          distribution: 'temurin'
+          java-version: 21
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@10.1
         with:
